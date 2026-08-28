@@ -250,9 +250,6 @@ async function openRewardCamera(){
  el('flipCamBtn').disabled=false;
  el('snapBtn').disabled=false;
  el('aiStatus').textContent='';
-
- await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
- await startCamera();
 }
 async function startCamera(){
  try{
@@ -281,7 +278,20 @@ async function startCamera(){
   goHome();
  }
   }
-async function flipCamera(){if(rewardShot||rewardFixed)return;camFacing=camFacing==='user'?'environment':'user';await startCamera()}
+async function flipCamera(){
+ if(rewardShot||rewardFixed)return;
+
+ const v=el('camVideo');
+
+ if(!camStream || !v.srcObject || v.paused){
+  await startCamera();
+  el('flipCamBtn').textContent='↺ Kamera';
+  return;
+ }
+
+ camFacing=camFacing==='user'?'environment':'user';
+ await startCamera();
+}
 function takePhoto(){if(rewardFixed)return;const v=el('camVideo'),c=el('camCanvas');if(!v.videoWidth){alert('Kamera belum siap.');return}c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0,c.width,c.height);if(camStream)camStream.getTracks().forEach(t=>t.stop());rewardShot=true;v.classList.add('hidden');c.classList.remove('hidden');el('themeControls').classList.remove('hidden');applyStylePreview()}
 function currentStyle(){return STYLE_PRESETS.find(x=>x.id===el('rewardStyle').value)||STYLE_PRESETS[0]}
 function applyStylePreview(){if(rewardFixed)return;const x=currentStyle();el('cameraStage').className='camera-stage';el('camCanvas').style.filter=x.filter;el('themeHint').textContent=x.hint}
