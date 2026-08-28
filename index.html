@@ -223,7 +223,37 @@ function visibleAiThemes(cat){return (AI_THEMES[cat]||[]).filter(x=>x.wave<=REWA
 function renderAiThemes(){const cat=el('aiCategory').value,list=visibleAiThemes(cat),s=el('aiTheme');s.innerHTML=list.map(x=>`<option value="${x.id}">${x.name}</option>`).join('');updateAiHint()}
 function selectedAiTheme(){const cat=el('aiCategory').value,id=el('aiTheme').value;return visibleAiThemes(cat).find(x=>x.id===id)||visibleAiThemes(cat)[0]}
 function updateAiHint(){const x=selectedAiTheme();el('aiThemeHint').textContent=x?x.hint:'Tema ini belum dibuka.'}
-async function openRewardCamera(){if(!FEATURES.rewardCamera)return;hide();el('rewardCamera').classList.remove('hidden');rewardFixed=false;rewardShot=false;rewardDataUrl=null;rewardAiBusy=false;rewardMime='image/jpeg';el('themeControls').classList.add('hidden');el('fixedControls').classList.add('hidden');el('camVideo').classList.remove('hidden');el('camCanvas').classList.add('hidden');renderStyleOptions();renderAiThemes();el('rewardStyle').disabled=false;el('aiCategory').disabled=false;el('aiTheme').disabled=false;el('fixBtn').disabled=false;el('aiTransformBtn').disabled=false;el('retakeBtn').disabled=false;el('flipCamBtn').disabled=false;el('snapBtn').disabled=false;el('aiStatus').textContent='';await startCamera()}
+async function openRewardCamera(){
+ if(!FEATURES.rewardCamera)return;
+ hide();
+ el('rewardCamera').classList.remove('hidden');
+ rewardFixed=false;
+ rewardShot=false;
+ rewardDataUrl=null;
+ rewardAiBusy=false;
+ rewardMime='image/jpeg';
+
+ el('themeControls').classList.add('hidden');
+ el('fixedControls').classList.add('hidden');
+ el('camVideo').classList.remove('hidden');
+ el('camCanvas').classList.add('hidden');
+
+ renderStyleOptions();
+ renderAiThemes();
+
+ el('rewardStyle').disabled=false;
+ el('aiCategory').disabled=false;
+ el('aiTheme').disabled=false;
+ el('fixBtn').disabled=false;
+ el('aiTransformBtn').disabled=false;
+ el('retakeBtn').disabled=false;
+ el('flipCamBtn').disabled=false;
+ el('snapBtn').disabled=false;
+ el('aiStatus').textContent='';
+
+ await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+ await startCamera();
+}
 async function startCamera(){try{if(camStream)camStream.getTracks().forEach(t=>t.stop());camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:camFacing}},audio:false});const v=el('camVideo');v.srcObject=camStream;v.muted=true;v.setAttribute('playsinline','');if(v.readyState<2)await new Promise((resolve,reject)=>{const ok=()=>{cleanup();resolve()};const bad=()=>{cleanup();reject(new Error('Video kamera gagal dimuat.'))};const cleanup=()=>{v.removeEventListener('loadedmetadata',ok);v.removeEventListener('error',bad)};v.addEventListener('loadedmetadata',ok,{once:true});v.addEventListener('error',bad,{once:true})});await v.play()}catch(e){alert('Kamera belum bisa dibuka. Pastikan izin kamera diberikan dan halaman dibuka lewat HTTPS.');goHome()}}
 async function flipCamera(){if(rewardShot||rewardFixed)return;camFacing=camFacing==='user'?'environment':'user';await startCamera()}
 function takePhoto(){if(rewardFixed)return;const v=el('camVideo'),c=el('camCanvas');if(!v.videoWidth){alert('Kamera belum siap.');return}c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0,c.width,c.height);if(camStream)camStream.getTracks().forEach(t=>t.stop());rewardShot=true;v.classList.add('hidden');c.classList.remove('hidden');el('themeControls').classList.remove('hidden');applyStylePreview()}
