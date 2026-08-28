@@ -31,7 +31,7 @@
 <section id="groupSetup" class="card hidden"><h2>Main Grup</h2><p class="small">Buat satu grup untuk 2–5 orang. Setiap peserta mendapat link dan 7 pertanyaan berbeda. Progres tersinkron antar-HP.</p><select id="groupSize"><option value="2">2 orang</option><option value="3">3 orang</option><option value="4">4 orang</option><option value="5">5 orang</option></select><button class="btn primary" onclick="createGroup()">Buat grup</button><button class="btn ghost" onclick="goHome()">Balik</button><p id="groupErr" class="safeerr hidden"></p></section>
 <section id="groupRound" class="card hidden"><h2 id="groupTitle">Grup Klikfun</h2><p id="groupStatus" class="small"></p><div id="groupPeople"></div><div id="groupHostActions" class="hidden"><button class="btn soft" onclick="shareGroup()">Bagikan undangan grup</button><button class="btn ghost" onclick="refreshGroup()">Refresh progres</button></div><button class="btn ghost" onclick="goHome()">Kembali ke beranda</button></section>
 <section id="groupPlay" class="card hidden"><div class="progress"><div id="groupBar" class="bar" style="width:0%"></div></div><p class="small" id="groupStep"></p><h2 id="groupQ"></h2><div id="groupOpts"></div></section>
-<section id="rewardCamera" class="card hidden"><h2>Reward Camera</h2><p class="small">1 ronde = 1 hasil final. Pilih tema, lalu FIX. Setelah FIX tidak bisa ganti tema lagi.</p><div id="cameraStage" class="camera-stage"><video id="camVideo" autoplay playsinline muted></video><canvas id="camCanvas" class="hidden"></canvas></div><div class="row"><button class="btn ghost" id="flipCamBtn" onclick="flipCamera()">↺ Kamera</button><button class="btn primary" id="snapBtn" onclick="takePhoto()">Ambil foto</button></div><div id="themeControls" class="hidden"><select id="rewardTheme" onchange="applyThemePreview()"><option value="pusing">Pusing</option><option value="cemberut">Cemberut</option><option value="wibawa">Wibawa</option><option value="executive">Executive</option><option value="gothic">Gothic</option><option value="komedi">Komedi</option><option value="misterius">Misterius</option><option value="royal">Royal</option><option value="retro">Retro</option><option value="cinematic">Cinematic</option></select><div id="themeHint" class="small" style="margin:6px 0 10px"></div><button class="btn primary" id="fixBtn" onclick="fixReward()">FIX hasil ini</button><button class="btn ghost" id="retakeBtn" onclick="retakePhoto()">Foto ulang</button></div><div id="fixedControls" class="hidden"><div class="notice">Hasil sudah FIX. Tema tidak bisa diganti untuk ronde ini.</div><button class="btn primary" onclick="downloadReward()">Download hasil</button><button class="btn ghost" onclick="goHome()">Selesai</button></div></section>
+<section id="rewardCamera" class="card hidden"><h2>Reward Camera</h2><p class="small">1 ronde = 1 hasil final. Pilih tema lalu pilih STYLE atau AI TRANSFORM.</p><div id="cameraStage" class="camera-stage"><video id="camVideo" autoplay playsinline muted></video><canvas id="camCanvas" class="hidden"></canvas></div><div class="row"><button class="btn ghost" id="flipCamBtn" onclick="flipCamera()">↺ Kamera</button><button class="btn primary" id="snapBtn" onclick="takePhoto()">Ambil foto</button></div><div id="themeControls" class="hidden"><select id="rewardTheme" onchange="applyThemePreview()"><option value="pusing">Pusing</option><option value="cemberut">Cemberut</option><option value="wibawa">Wibawa</option><option value="executive">Executive</option><option value="gothic">Gothic</option><option value="komedi">Komedi</option><option value="misterius">Misterius</option><option value="royal">Royal</option><option value="retro">Retro</option><option value="cinematic">Cinematic</option></select><div id="themeHint" class="small" style="margin:6px 0 10px"></div><button class="btn soft" id="fixBtn" onclick="fixReward()">STYLE</button><button class="btn primary" id="aiTransformBtn" onclick="transformRewardAI()">AI TRANSFORM</button><div id="aiStatus" class="small" style="margin:6px 0 10px"></div><button class="btn ghost" id="retakeBtn" onclick="retakePhoto()">Foto ulang</button></div><div id="fixedControls" class="hidden"><div class="notice">Hasil sudah final. Pilih Download atau selesai.</div><button class="btn primary" onclick="downloadReward()">Download hasil</button><button class="btn ghost" onclick="goHome()">Selesai</button></div></section>
 <section id="whatsNew" class="card hidden"><h2>Ada yang baru 👀</h2><div id="whatsNewBody"></div><button class="btn primary" onclick="markAnnouncementSeen()">Oke, lihat nanti</button></section>
 <section class="card"><div class="tabs"><div class="tab">TEBAK</div><div class="tab">AYO</div><div class="tab">SUDAH</div></div><p class="small" style="margin-top:14px">Beta minim data: tidak minta kontak, lokasi, nama lengkap, foto, nomor HP, atau email. Ronde otomatis kedaluwarsa.</p></section>
 <div class="footer"><a href="privacy.html">Privasi</a> · <a href="safety.html">Keamanan & pelaporan</a><br><span id="bankStat"></span></div>
@@ -61,117 +61,4 @@ function shareWhatsApp(){if(!activeCode)return;const text=encodeURIComponent('Co
 async function copyInvite(){if(!activeCode)return;try{await navigator.clipboard.writeText(inviteUrl());track('invite_copied');alert('Link sudah disalin.')}catch(e){prompt('Salin link ini:',inviteUrl())}}
 function startFriend(){mode='friend';i=0;hide();el('quiz').classList.remove('hidden');render()} function showJoin(){needConsent(()=>{hide();el('join').classList.remove('hidden');el('joinCode').focus()})}
 async function joinGame(){let c=el('joinCode').value.trim().toUpperCase();el('joinErr').textContent='';if(!/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/.test(c)){el('joinErr').textContent='Kode harus tepat 6 karakter.';return}try{await loadRoundByCode(c)}catch(e){el('joinErr').textContent=e.message||'Kode nggak ketemu'}}
-async function loadRoundByCode(c){let r=await fetch('/api/session/'+encodeURIComponent(c)),d=await r.json();if(!r.ok)throw Error(d.error||'Ronde tidak ditemukan');activeCode=c;parentCode=c;questions=d.questions;self=[];friend=[];mode='friend';i=0;hide();el('quiz').classList.remove('hidden');render();track('friend_started')}
-async function joinFromLink(code){needConsent(async()=>{try{await loadRoundByCode(String(code||'').trim().toUpperCase())}catch(e){goHome();alert(e.message||'Link ronde sudah tidak berlaku.')}})}
-async function finishFriend(){let s=0,missIdx=[];try{if(friend.length!==7)throw Error('Tebakan belum lengkap.');let r=await fetch('/api/guess/'+activeCode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({guesses:friend})});let d=await r.json();if(!r.ok)throw Error(d.error||'Gagal menghitung hasil');s=d.score;missIdx=d.misses||[]}catch(e){quizBusy=false;i=6;friend=friend.slice(0,6);render();alert(e.message||'Gagal menghitung hasil. Coba jawaban terakhir lagi.');return}quizBusy=false;el('score').textContent=s;el('reaction').textContent=s>=6?pickCopy('score_high','Wih, tajam juga tebakannya.'):s>=3?pickCopy('score_mid','Lumayan kena. Tapi masih ada plot twist. 👀'):pickCopy('score_low','Wkwk… ternyata masih banyak plot twist.');let misses=[];questions.forEach((x,j)=>{if(missIdx.includes(j))misses.push('“'+x.q+'”')});el('miss').textContent=misses.length?'Yang bikin beda: '+misses.slice(0,2).join(' dan ')+'.':'';el('shareTitle').textContent='Klikfun · '+s+'/7 tebakan kena';hide();el('result').classList.remove('hidden')}
-function becomeNext(){parentCode=activeCode;activeCode=null;track('became_next');startSelf()} function track(event,meta={}){fetch('/api/event',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event,code:activeCode,parent_code:parentCode,meta})}).catch(()=>{})}
-const BLOCK_PATTERNS=[/\b(porno|pornografi|bokep|ngentot|ngewe|kontol|memek)\b/i,/\b(perkosa|memperkosa|bunuh\s+dia|membunuh\s+dia)\b/i,/\b(goblok|tolol|bangsat)\b/i];
-const BODY_SHAME_PATTERNS=[/\b(gendut\s+banget|kurus\s+banget|jelek\s+banget|badan\s+.*jelek)\b/i];
-function normalizeSafety(s){return String(s||'').normalize('NFKC').toLowerCase().replace(/[\u200B-\u200D\uFEFF]/g,'').replace(/(.)\1{3,}/g,'$1$1').replace(/[._\-*]+/g,' ').replace(/\s+/g,' ').trim()}
-function safetyCheck(s){const t=normalizeSafety(s);if(!t)return{ok:true};if(BLOCK_PATTERNS.some(r=>r.test(t)))return{ok:false,msg:'Coba tulis dengan cara lain ya. Pilihan ini tidak sesuai aturan aman Klikfun.'};if(BODY_SHAME_PATTERNS.some(r=>r.test(t)))return{ok:false,msg:'Hindari pilihan yang bisa jadi body-shaming ya.'};if(/https?:\/\/|www\./i.test(t))return{ok:false,msg:'Link tidak perlu dimasukkan di bagian ini.'};return{ok:true}}
-function toggleOtherActivity(){el('otherActivity').classList.toggle('hidden',el('activity').value!=='OTHER');el('planErr').classList.add('hidden')}
-function showAyo(){needConsent(()=>{track('ayo_open');hide();el('ayo').classList.remove('hidden');el('planErr').classList.add('hidden')})}
-function savePlan(){let a=el('activity').value==='OTHER'?el('otherActivity').value.trim():el('activity').value;let w=(el('when').value||'nanti').trim().slice(0,80);if(!a){el('planErr').textContent='Tulis kegiatannya dulu ya.';el('planErr').classList.remove('hidden');return}const c1=safetyCheck(a),c2=safetyCheck(w);if(!c1.ok||!c2.ok){el('planErr').textContent=(c1.ok?c2.msg:c1.msg);el('planErr').classList.remove('hidden');return}track('plan_created');localStorage.setItem('kf_plan',a.slice(0,60)+' · '+w);el('planText').textContent=a.slice(0,60)+' · '+w;hide();el('planDone').classList.remove('hidden');el('planDone').querySelector('h2').textContent=pickCopy('ayo_accept','Sip. Jangan cuma jadi wacana. 😄')}
-function markDone(){track('plan_done');let p=localStorage.getItem('kf_plan');if(p){let arr=JSON.parse(localStorage.getItem('kf_done')||'[]');arr.push(p);localStorage.setItem('kf_done',JSON.stringify(arr.slice(-100)));localStorage.removeItem('kf_plan')}showSudah()}
-function showSudah(){hide();el('sudah').classList.remove('hidden');let arr=JSON.parse(localStorage.getItem('kf_done')||'[]');el('doneList').innerHTML=arr.length?arr.map(x=>'<div class="metric"><span></span><b>✓</b></div>').join(''):'<p class="small">Belum ada. Santai, hidup bukan checklist.</p>';[...el('doneList').querySelectorAll('.metric span')].forEach((s,j)=>s.textContent=arr[j])}
-async function deleteCurrentRound(){if(!activeCode)return;let key=localStorage.getItem('kf_delete_'+activeCode);if(!key){alert('Kunci hapus tidak ada di perangkat ini.');return}if(!confirm('Hapus isi ronde ini? Kode tidak bisa dipakai lagi.'))return;let r=await fetch('/api/session/'+activeCode+'/delete',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({delete_key:key})});let d=await r.json();if(r.ok){localStorage.removeItem('kf_delete_'+activeCode);activeCode=null;parentCode=null;goHome();alert('Ronde sudah dihapus.')}else alert(d.error||'Gagal menghapus')}
-function openReport(code){if(!code)return;reportCode=code;track('report_open');el('reportModal').classList.remove('hidden')} function openReportFromJoin(){let c=el('joinCode').value.trim().toUpperCase();if(c.length!==6){alert('Masukkan kode 6 karakter dulu.');return}openReport(c)} function closeReport(){reportCode=null;el('reportModal').classList.add('hidden')}
-async function submitReport(){if(!reportCode)return;let r=await fetch('/api/report/'+reportCode,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({reason:el('reportReason').value})}),d=await r.json();closeReport();if(r.ok)alert('Laporan diterima. Terima kasih.');else alert(d.error||'Laporan gagal')}
-
-let groupCode=null,groupAdminKey=null,groupParticipantToken=null,groupQuestions=[],groupAnswers=[],groupIndex=0,groupPoll=null;
-function showGroupSetup(){needConsent(()=>{hide();el('groupSetup').classList.remove('hidden');el('groupErr').classList.add('hidden')})}
-async function createGroup(){
-  const size=Math.max(2,Math.min(FEATURES.maxGroup,Number(el('groupSize').value||2)));
-  const pool=[...BANK].filter(q=>q&&q.active!==false&&Array.isArray(q.o)&&q.o.length===4);
-  const picked=[];const seenText=new Set();
-  for(const q of pool.sort(()=>Math.random()-.5)){
-    const key=String(q.q||'').trim().toLowerCase();
-    if(!key||seenText.has(key))continue;
-    seenText.add(key);picked.push(q);
-    if(picked.length>=size*7)break;
-  }
-  if(picked.length<size*7){showGroupError('Bank pertanyaan unik belum cukup untuk grup ini.');return}
-  const assignments=[];
-  for(let p=0;p<size;p++)assignments.push(picked.slice(p*7,(p+1)*7));
-  try{
-    const r=await fetch('/api/group',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({size,assignments,consent:true})});
-    const d=await r.json();if(!r.ok)throw Error(d.error||'Gagal membuat grup');
-    groupCode=d.code;groupAdminKey=d.admin_key;localStorage.setItem('kf_group_admin_'+groupCode,groupAdminKey);
-    localStorage.setItem('kf_group_links_'+groupCode,JSON.stringify(d.participants||[]));
-    showGroupDashboard(d,true);track('group_started',{mode:String(size)})
-  }catch(e){showGroupError(e.message||'Grup belum bisa dibuat.')}
-}
-function showGroupError(msg){el('groupErr').textContent=msg;el('groupErr').classList.remove('hidden')}
-function groupBaseUrl(){const u=new URL(location.href);u.search='';u.hash='';return u}
-function participantUrl(code,slot,token){const u=groupBaseUrl();u.searchParams.set('group',code);u.searchParams.set('slot',String(slot));u.searchParams.set('token',token);return u.toString()}
-async function showGroupDashboard(data,isHost=false){
-  hide();el('groupRound').classList.remove('hidden');groupCode=data.code||groupCode;
-  el('groupTitle').textContent='Grup '+groupCode;
-  const people=data.participants||[];
-  const done=people.filter(p=>p.completed).length;
-  el('groupStatus').textContent=`${done}/${people.length} peserta selesai · kedaluwarsa otomatis`;
-  const savedLinks=JSON.parse(localStorage.getItem('kf_group_links_'+groupCode)||'[]');
-  el('groupPeople').innerHTML=people.map((p,idx)=>{
-    const link=savedLinks.find(x=>Number(x.slot)===Number(p.slot));
-    const action=link?`<button class="linkbtn" onclick="shareParticipant(${p.slot},'${link.token}')">Kirim link peserta ${p.slot}</button>`:'';
-    return `<div class="metric"><span>Peserta ${p.slot}</span><b>${p.completed?'✓ selesai':'menunggu'}</b></div>${action}`;
-  }).join('');
-  el('groupHostActions').classList.toggle('hidden',!isHost);
-  if(isHost){clearInterval(groupPoll);groupPoll=setInterval(refreshGroup,8000)}
-}
-async function refreshGroup(){
-  if(!groupCode)return;
-  const key=groupAdminKey||localStorage.getItem('kf_group_admin_'+groupCode);
-  if(!key)return;
-  try{const r=await fetch('/api/group/'+groupCode+'?admin_key='+encodeURIComponent(key));const d=await r.json();if(r.ok)showGroupDashboard(d,true)}catch(e){}
-}
-async function shareParticipant(slot,token){
-  const url=participantUrl(groupCode,slot,token),data={title:'Klikfun Grup',text:`Masuk sebagai Peserta ${slot} 👀`,url};
-  try{if(navigator.share)await navigator.share(data);else{await navigator.clipboard.writeText(url);alert('Link peserta sudah disalin.')}}catch(e){}
-}
-async function shareGroup(){
-  const links=JSON.parse(localStorage.getItem('kf_group_links_'+groupCode)||'[]');
-  const text=links.map(p=>`Peserta ${p.slot}: ${participantUrl(groupCode,p.slot,p.token)}`).join('\n');
-  try{if(navigator.share)await navigator.share({title:'Klikfun Grup',text});else{await navigator.clipboard.writeText(text);alert('Semua link peserta sudah disalin.')}}catch(e){}
-}
-async function joinGroupFromLink(code,slot,token){
-  needConsent(async()=>{
-    try{
-      const r=await fetch('/api/group/'+encodeURIComponent(code)+'/participant/'+encodeURIComponent(slot)+'?token='+encodeURIComponent(token));
-      const d=await r.json();if(!r.ok)throw Error(d.error||'Undangan grup tidak berlaku');
-      groupCode=code;groupParticipantToken=token;groupQuestions=d.questions;groupAnswers=[];groupIndex=0;
-      if(d.completed){hide();el('groupRound').classList.remove('hidden');el('groupTitle').textContent='Peserta '+slot;el('groupStatus').textContent='Jawabanmu sudah tersimpan. Tinggal tunggu peserta lain.';el('groupPeople').innerHTML='';el('groupHostActions').classList.add('hidden');return}
-      sessionStorage.setItem('kf_group_slot',String(slot));hide();el('groupPlay').classList.remove('hidden');renderGroupQuestion()
-    }catch(e){goHome();alert(e.message||'Undangan grup tidak berlaku.')}
-  })
-}
-function renderGroupQuestion(){
-  if(groupIndex>=7)return submitGroupAnswers();
-  const q=groupQuestions[groupIndex];el('groupBar').style.width=(groupIndex/7*100)+'%';el('groupStep').textContent=`Pertanyaan ${groupIndex+1}/7`;el('groupQ').textContent=q.q;el('groupOpts').innerHTML='';
-  q.o.forEach((x,n)=>{const b=document.createElement('button');b.className='btn option';b.textContent=x;b.onclick=()=>{groupAnswers.push(n);groupIndex++;renderGroupQuestion()};el('groupOpts').appendChild(b)})
-}
-async function submitGroupAnswers(){
-  const slot=Number(sessionStorage.getItem('kf_group_slot'));
-  el('groupStep').textContent='Menyimpan jawaban…';el('groupQ').textContent='Sebentar ya…';el('groupOpts').innerHTML='';
-  try{
-    const r=await fetch('/api/group/'+groupCode+'/participant/'+slot,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:groupParticipantToken,answers:groupAnswers})});
-    const d=await r.json();if(!r.ok)throw Error(d.error||'Gagal menyimpan');
-    hide();el('groupRound').classList.remove('hidden');el('groupTitle').textContent='Selesai ✓';el('groupStatus').textContent=`${d.completed_count}/${d.size} peserta sudah selesai. Jawabanmu tersimpan sementara.`;el('groupPeople').innerHTML='';el('groupHostActions').classList.add('hidden')
-  }catch(e){groupIndex=6;groupAnswers=groupAnswers.slice(0,6);hide();el('groupPlay').classList.remove('hidden');renderGroupQuestion();alert(e.message||'Gagal menyimpan. Coba jawaban terakhir lagi.')}
-}
-let camStream=null,camFacing='user',rewardFixed=false,rewardShot=false,rewardDataUrl=null;
-const THEME_HINTS={pusing:'Sedikit redup dan dingin—tetap soft, bukan karikatur.',cemberut:'Tone lebih tenang dengan kontras lembut.',wibawa:'Kontras rapi dan warna lebih terkendali.',executive:'Netral, bersih, dan profesional.',gothic:'Lebih gelap dan dramatis tanpa mengubah pakaian.',komedi:'Sedikit lebih cerah dan hidup.',misterius:'Lebih redup dengan suasana tenang.',royal:'Hangat, elegan, tanpa simbol/karakter berhak cipta.',retro:'Nuansa hangat klasik.',cinematic:'Kontras halus seperti still film.'};
-async function openRewardCamera(){if(!FEATURES.rewardCamera)return;hide();el('rewardCamera').classList.remove('hidden');rewardFixed=false;rewardShot=false;rewardDataUrl=null;el('themeControls').classList.add('hidden');el('fixedControls').classList.add('hidden');el('camVideo').classList.remove('hidden');el('camCanvas').classList.add('hidden');el('rewardTheme').disabled=false;el('fixBtn').disabled=false;el('retakeBtn').disabled=false;el('flipCamBtn').disabled=false;el('snapBtn').disabled=false;await startCamera()}
-async function startCamera(){try{if(camStream)camStream.getTracks().forEach(t=>t.stop());camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:camFacing}},audio:false});el('camVideo').srcObject=camStream}catch(e){alert('Kamera belum bisa dibuka. Pastikan izin kamera diberikan dan halaman dibuka lewat HTTPS.');goHome()}}
-async function flipCamera(){if(rewardShot||rewardFixed)return;camFacing=camFacing==='user'?'environment':'user';await startCamera()}
-function takePhoto(){if(rewardFixed)return;const v=el('camVideo'),c=el('camCanvas');if(!v.videoWidth){alert('Kamera belum siap.');return}c.width=v.videoWidth;c.height=v.videoHeight;c.getContext('2d').drawImage(v,0,0,c.width,c.height);if(camStream)camStream.getTracks().forEach(t=>t.stop());rewardShot=true;v.classList.add('hidden');c.classList.remove('hidden');el('themeControls').classList.remove('hidden');applyThemePreview()}
-function applyThemePreview(){if(rewardFixed)return;const theme=el('rewardTheme').value;el('cameraStage').className='camera-stage theme-'+theme;el('themeHint').textContent=THEME_HINTS[theme]||''}
-function retakePhoto(){if(rewardFixed)return;rewardShot=false;el('themeControls').classList.add('hidden');el('camCanvas').classList.add('hidden');el('camVideo').classList.remove('hidden');el('cameraStage').className='camera-stage';startCamera()}
-function fixReward(){if(rewardFixed||!rewardShot)return;const c=el('camCanvas'),theme=el('rewardTheme').value,out=document.createElement('canvas');out.width=c.width;out.height=c.height;const ctx=out.getContext('2d');const filters={pusing:'saturate(.82) contrast(1.04) brightness(.98)',cemberut:'saturate(.72) contrast(1.08) brightness(.94)',wibawa:'contrast(1.09) saturate(.9) brightness(.98)',executive:'contrast(1.06) saturate(.82) brightness(1.02)',gothic:'grayscale(.45) contrast(1.18) brightness(.88)',komedi:'saturate(1.18) contrast(1.03) brightness(1.05)',misterius:'saturate(.7) contrast(1.15) brightness(.86)',royal:'sepia(.16) saturate(1.06) contrast(1.04)',retro:'sepia(.28) saturate(.82) contrast(.98)',cinematic:'contrast(1.13) saturate(.88) brightness(.95)'};ctx.filter=filters[theme]||'none';ctx.drawImage(c,0,0);ctx.filter='none';const g=ctx.createRadialGradient(out.width/2,out.height/2,Math.min(out.width,out.height)*.25,out.width/2,out.height/2,Math.max(out.width,out.height)*.72);g.addColorStop(0,'rgba(0,0,0,0)');g.addColorStop(1,'rgba(0,0,0,.12)');ctx.fillStyle=g;ctx.fillRect(0,0,out.width,out.height);rewardDataUrl=out.toDataURL('image/jpeg',.9);const img=new Image();img.onload=()=>{c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0)};img.src=rewardDataUrl;rewardFixed=true;el('themeControls').classList.add('hidden');el('fixedControls').classList.remove('hidden');track('reward_fixed',{theme})}
-function downloadReward(){if(!rewardFixed||!rewardDataUrl)return;const a=document.createElement('a');a.href=rewardDataUrl;a.download='klikfun-reward.jpg';document.body.appendChild(a);a.click();a.remove();rewardDataUrl=null;track('reward_downloaded')}
-function showAnnouncementIfNeeded(){if(!FEATURES.announcements)return;const seen=localStorage.getItem('kf_announcement_seen');if(seen!==ANNOUNCEMENT.id){el('whatsNewBadge').classList.remove('hidden');setTimeout(()=>{hide();el('whatsNew').classList.remove('hidden');el('whatsNewBody').innerHTML=`<p><b>${ANNOUNCEMENT.title}</b></p><p class="small">${ANNOUNCEMENT.body}</p>`},300)}}
-function markAnnouncementSeen(){localStorage.setItem('kf_announcement_seen',ANNOUNCEMENT.id);el('whatsNewBadge').classList.add('hidden');goHome()}
-
-async function init(){try{let r=await fetch('/api/config'),d=await r.json();if(d.beta_min_age&&d.beta_min_age!==18)document.querySelectorAll('.pill')[0].textContent='Beta aman · '+d.beta_min_age+'+'}catch(e){}const seed=localStorage.getItem('kf_seed_label');if(seed){el('seedBadge').textContent='Mode tester: '+seed;el('seedBadge').classList.remove('hidden')}el('bankStat').textContent=BANK.length+' pertanyaan · '+Object.values(COPY).reduce((a,b)=>a+b.length,0)+' microcopy';const sp=new URLSearchParams(location.search),g=sp.get('group'),slot=sp.get('slot'),token=sp.get('token'),joinCode=sp.get('join');if(g&&slot&&token&&/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/i.test(g)&&/^[1-5]$/.test(slot)){joinGroupFromLink(g,Number(slot),token)}else if(joinCode&&/^[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{6}$/i.test(joinCode)){joinFromLink(joinCode)}else{showAnnouncementIfNeeded()}}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('/sw.js').catch(()=>{});init();
-</script></body></html>
+async function loadRoundByCode(c){let r=await fetch('/api/session/'+encodeURIComponent(c)),d=await r.json();if(!r.ok)throw Error(d.error||'Ronde tidak ditemukan');activeCode=c;parentCode=c;questions=d.questions;self=[];friend=[];mode='friend';i=0;hide();el('quiz').classList.remove('hid
