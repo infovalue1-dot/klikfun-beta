@@ -122,16 +122,12 @@ const cartoonMode=theme==="cartoon";
 
 const finalPrompt=
   identityRule+
-  (
-    cartoonMode
-      ?" Create a family-friendly illustrated transformation based on the reference photo. "
-      :" Edit the reference photo as a photorealistic photograph. Keep the same real person and the same recognizable face. Do not turn the person into a cartoon, anime, illustration, painting, drawing, 3D character, or avatar. "
-  )+
+  " Photorealistic photo edit of the same person. "+
   (safeVariation?`Theme: ${safeVariation}. `:"")+
-  "Apply the selected theme to clothing, setting, atmosphere, and appropriate accessories while preserving the person's facial identity. "+
-  "For sport themes, show a realistic athlete appropriate to the selected sport. "+
-  "Keep clothing modest and age-appropriate. Preserve head coverings exactly when present. "+
-  "Do not add text, logos, trademarks, watermarks, extra people, duplicate faces, or distorted hands.";
+  "Keep the same recognizable face, age and skin tone. "+
+  "Apply the theme mainly to clothing and background. "+
+  "Keep clothing modest. Preserve head coverings. "+
+  "No text, logos, extra people or duplicate faces.";
   const aiForm=new FormData();
   aiForm.append("input_image_0",image,image.name||"klikfun.jpg");
   aiForm.append("prompt",finalPrompt);
@@ -174,5 +170,10 @@ if(memberResponse)return memberResponse;if(!env.DB)return json({error:"Database 
                                 if(path==="/api/config"&&method==="GET")return json({session_ttl_hours:48,telemetry_retention_days:30,max_group_people:5,public_reward_themes:10,photo_ttl_hours:5,group_sync:true});if(path==="/api/session"&&method==="POST")return createSession(request,env,env.DB);if(path==="/api/group"&&method==="POST")return createGroup(request,env,env.DB);let m=path.match(/^\/api\/group\/([A-Z2-9]{6})$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getGroupAdmin(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/group\/([A-Z2-9]{6})\/participant\/([1-5])$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getGroupParticipant(request,env,c,Number(m[2]),env.DB):json({error:"Kode tidak valid"},400)}if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitGroupParticipant(request,env,c,Number(m[2]),env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/session\/([A-Z2-9]{6})$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getSession(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/session\/([A-Z2-9]{6})\/delete$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?deleteSession(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/guess\/([A-Z2-9]{6})$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitGuess(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/report\/([A-Z2-9]{6})$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitReport(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}if(path==="/api/event"&&method==="POST")return submitEvent(request,env,env.DB);if(path.startsWith("/api/"))return json({error:"Endpoint tidak ditemukan"},404);return null}
 function withSecurityHeaders(response){const headers=new Headers(response.headers);for(const[k,v]of Object.entries(securityHeaders()))headers.set(k,v);return new Response(response.body,{status:response.status,statusText:response.statusText,headers})}
 export default{async fetch(request,env){try{const url=new URL(request.url);if(url.pathname.startsWith("/api/")){const response=await api(request,env);if(response)return response}const assetResponse=await env.ASSETS.fetch(request);return withSecurityHeaders(assetResponse)}catch(e){
-  if(new URL(request.url).pathname==="/api/reward-ai"){return json({error:"AI ERROR: "+String(e?.message||e)},500);}
+  if(new URL(request.url).pathname==="/api/reward-ai"){
+  console.error("Reward AI error",e);
+  return json({
+    error:"AI Transform belum berhasil. Coba foto atau tema lain."
+  },500);
+}
   console.error("Klikfun worker error",e);const msg=String(e?.message||"");if(msg==="Payload terlalu besar"||msg==="JSON tidak valid"||msg==="Content-Type harus application/json")return json({error:msg},400);return json({error:"Terjadi gangguan server. Coba lagi."},500)}}};
