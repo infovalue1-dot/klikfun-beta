@@ -149,8 +149,9 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 
   <section id="memberGate" class="card hidden">
     <h2>Member Klikfun</h2>
-    <p class="small">Arsitektur member disiapkan untuk passkey, recovery code, member ID, inbox, notifikasi, progression, KP, inventory, dan leaderboard.</p>
-    <div class="notice warn">Login/member backend belum diaktifkan pada prototipe ini. Tidak ada kredensial palsu yang dibuat di browser.</div>
+    <p class="small">Buat akun baru atau masuk untuk menyimpan progres Klikfun.</p>
+    <button class="btn primary" disabled aria-disabled="true">Daftar · Segera tersedia</button>
+    <button class="btn ghost" disabled aria-disabled="true">Masuk · Segera tersedia</button>
     <button class="btn ghost" onclick="showOnly('welcome')">Balik</button>
   </section>
 
@@ -159,7 +160,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="grid2">
       <button class="action" onclick="startSelf()"><b>TEBAK</b><span>Jawab 7 pertanyaan tentang dirimu, lalu temanmu menebak lewat link.</span></button>
       <button class="action" onclick="showGroupSetup()"><b>GRUP</b><span>2–5 peserta. Pertanyaan berbeda untuk setiap peserta.</span></button>
-      <button class="action" onclick="showJanji()"><b>JANJI</b><span>Pilih aktivitas dan waktu dari opsi aman Klikfun. Tanpa pesan bebas.</span></button>
+          <button class="action" onclick="showJanji()"><b>JANJI</b><span>Pilih aktivitas dan waktu dari opsi aman Klikfun. Tanpa pesan bebas.</span></button>
       <button class="action" onclick="showGame()"><b>GAME</b><span>Portal adventure dan Arena 5v5.</span></button>
     </div>
     <div class="notice" style="margin-top:12px">Reward terbuka setelah aktivitas yang memenuhi syarat.</div>
@@ -178,7 +179,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="share"><div class="small">LINK UNDANGAN</div><div id="shareUrl" style="word-break:break-all;margin-top:8px"></div></div>
     <button class="btn primary" onclick="shareInvite()">Kirim ke teman</button>
     <button class="btn soft" onclick="copyInvite()">Salin link</button>
-       <button class="btn ghost" onclick="startFriendLocal()">Teman ada di sini</button>
+    <button class="btn ghost" onclick="startFriendLocal()">Teman ada di sini</button>
   </section>
 
   <section id="result" class="card hidden">
@@ -205,7 +206,6 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <h2>Grup Klikfun</h2>
     <p id="groupStatus" class="small"></p>
     <div id="groupPeople"></div>
-    <div class="notice">Versi final memakai link/token internal per peserta dan sinkronisasi server ringan. Tidak ada UX kode 6 karakter.</div>
     <button id="groupPersonalRewardBtn" class="btn primary hidden" onclick="unlockReward('group-personal')">Reward Camera pribadi</button>
     <button id="groupSharedRewardBtn" class="btn soft hidden" onclick="unlockReward('group-shared')">Group Reward Camera</button>
     <button class="btn ghost" onclick="goHome()">Selesai</button>
@@ -213,7 +213,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 
   <section id="janji" class="card hidden">
     <h2>JANJI</h2>
-    <p class="small">Tanpa free-text. Pilih hanya opsi yang disediakan Klikfun.</p>
+    <p class="small">Pilih kegiatan dan waktu yang tersedia.</p>
     <h3>Kegiatan</h3>
     <div id="activityChips" class="chipwrap"></div>
     <h3>Waktu</h3>
@@ -226,7 +226,6 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
   <section id="janjiDone" class="card hidden">
     <h2>JANJI siap.</h2>
     <p id="janjiDoneText"></p>
-    <p class="small">Member → Member nantinya masuk inbox/status internal. Pengunjung/nonmember memakai link eksternal.</p>
     <button class="btn soft" onclick="shareJanji()">Bagikan JANJI</button>
     <button class="btn ghost" onclick="goHome()">Balik</button>
   </section>
@@ -235,25 +234,23 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="metric"><div><b>GAME Klikfun</b><div class="small">Action-RPG Portal sebagai progression utama · Arena 5v5 sebagai mode kompetitif.</div></div></div>
     <div class="grid2">
       <button class="action" onclick="showPortalHub()"><b>Portal Mission</b><span>Farming EXP, Skill Book, Artifact, senjata, material dan loot. Portal dapat berisi monster, boss, eksplorasi atau hanya loot.</span></button>
-      <button class="action" onclick="showGameMode('multi')"><b>Arena 5v5</b><span>Battle kompetitif tanpa farming level/EXP di dalam pertandingan. Bot maksimal 60% dari 10 slot.</span></button>
+      <button class="action" onclick="showGameMode('multi')"><b>Arena 5v5</b><span>Battle kompetitif 5v5 tanpa farming level/EXP di dalam pertandingan.</span></button>
       <button class="action" onclick="showMarketplace()"><b>Marketplace KP</b><span>Jual reward ke pemain lain atau jual cepat ke System dengan harga KP lebih rendah.</span></button>
-      <button class="action guild-disabled" disabled aria-disabled="true"><b>Guild · Disabled</b></button>
     </div>
     <h3>Progression</h3>
     <div class="tabs"><span class="tab">Portal</span><span class="tab">Boss Portal</span><span class="tab">Portal Break</span><span class="tab">Skill Book</span><span class="tab">Artifact</span><span class="tab">Weapon</span><span class="tab">KP Marketplace</span></div>
     <h3>Kontrol battle</h3>
-    <div class="notice ok">Landscape · gerak bebas joystick 360° di kiri · ATK/skill/ultimate/Recall di kanan · respawn untuk Arena · Quick Chat dan text chat dimoderasi · Voice Chat disabled.</div>
+    <div class="notice ok">Gerak dengan joystick di kiri. ATK, skill, ultimate, dan Recall ada di kanan.</div>
   </section>
 
   <section id="portalHub" class="card hidden">
-    <div class="metric"><div><b>Portal Mission</b><div class="small">10 Map Family × 20 subtema = 200 subtema awal. Registry dapat ditambah tanpa mengubah engine.</div></div><span id="portalArchiveCount" class="badge">Archive 0/200</span></div>
+    <div class="metric"><div><b>Portal Mission</b><div class="small">Jelajahi berbagai Portal dan temukan tantangan yang berbeda.</div></div><span id="portalArchiveCount" class="badge">Archive 0/200</span></div>
     <div class="row"><label class="small" style="flex:1">Map Family<select id="portalFamilySelect" onchange="renderPortalCatalog()"></select></label><label class="small" style="flex:1">Tipe<select id="portalTypeFilter" onchange="renderPortalCatalog()"><option value="all">Semua</option><option value="combat">Combat</option><option value="boss">Boss</option><option value="exploration">Exploration</option><option value="loot">Loot</option><option value="unknown">Unknown</option></select></label></div>
     <div id="portalCatalog" class="portal-grid"></div>
     <div id="portalDetail" class="share small">Pilih Portal.</div>
     <div class="portal-board">
       <div class="metric"><span>Party requirement</span><b id="portalPartyReq">—</b></div>
       <div class="metric"><span>Pemain manusia</span><b><select id="portalHumanCount" onchange="refreshPortalRecruitment()"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></b></div>
-      <div class="metric"><span>Bot Hero filler</span><b id="portalBotFill">—</b></div>
     </div>
     <div id="portalRecruitRoles" class="tabs"></div>
     <div id="portalNpcPreview" class="npc-box small">NPC clue akan menyesuaikan Portal yang dipilih.</div>
@@ -298,7 +295,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 
 
   <section id="portalBreak" class="card hidden">
-    <div class="metric"><div><b>Portal Break</b><div class="small">Event dari database. Tidak dibuat oleh AI generatif.</div></div><span id="portalBreakSeverity" class="badge">Severity —</span></div>
+    <div class="metric"><div><b>Portal Break</b></div><span id="portalBreakSeverity" class="badge">Severity —</span></div>
     <div id="portalBreakInfo" class="share"></div>
     <div id="portalBreakNpc" class="npc-box small"></div>
     <div id="portalBreakMonsters" class="tabs"></div>
@@ -310,17 +307,16 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <h2>Portal Recruitment</h2>
     <div id="recruitmentSummary" class="share"></div>
     <div id="recruitmentRoster" class="inventory-grid"></div>
-    <div class="notice">Bot Hero hanya melengkapi slot/role yang belum terpenuhi setelah jumlah manusia yang tersedia dimasukkan. Bot tetap ditandai <code>isBot=true</code> secara internal.</div>
     <button class="btn primary" onclick="startRecruitedPortal()">Mulai dengan tim ini</button>
     <button class="btn ghost" onclick="showPortalHub()">Balik</button>
   </section>
 
   <section id="heroCollection" class="card hidden"><div class="metric"><div><b>Hero Collection</b><div class="small">2 Hero awal dibagikan random-terkontrol sekali per profil dan permanen. Hero lain dibuka bertahap dari bermain.</div></div><span id="heroOwnedBadge" class="badge">2 Hero</span></div><div id="heroUnlockProgress" class="hero-profile-card"></div><div id="heroRosterGrid" class="hero-roster-grid" style="margin-top:10px"></div><button class="btn ghost" onclick="showOnly('gameMode');gameApplyLoadout()">Balik ke Arena</button></section>
-
+     
   <section id="heroDiscovery" class="card hidden"><div class="metric"><div><b>Hero Discovery</b><div class="small">Saat kesempatan terbuka, pilih 1 dari 3 Hero.</div></div><span id="heroDiscoveryBadge" class="badge">Belum tersedia</span></div><div id="heroDiscoveryInfo" class="hero-profile-card"></div><div id="heroDiscoveryChoices" class="hero-discovery-grid"></div><button class="btn ghost" onclick="showHeroCollection()">Balik ke Collection</button></section>
 
   <section id="marketplace" class="card hidden">
-       <div class="metric"><div><b>Marketplace KP</b><div class="small">Tidak menggunakan uang asli untuk jual-beli reward Portal.</div></div><span id="marketKP" class="badge">0 KP</span></div>
+    <div class="metric"><div><b>Marketplace KP</b><div class="small">Tidak menggunakan uang asli untuk jual-beli reward Portal.</div></div><span id="marketKP" class="badge">0 KP</span></div>
     <h3>Inventory</h3><div id="marketInventory" class="inventory-grid"></div>
     <h3>Listing pemain</h3><div id="marketListings" class="inventory-grid"></div>
     <div class="notice">Jual ke System = cepat tetapi harga KP lebih rendah. Listing ke pemain = pemilik menentukan harga KP. Vendor promo/voucher tidak otomatis dapat diperdagangkan.</div>
@@ -359,7 +355,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
       </div>
     </div>
     <div class="game-chat">
-      <div class="metric" style="padding-top:0"><b>Komunikasi tim</b><button type="button" class="btn ghost voice-disabled" style="width:auto;padding:8px 10px" disabled aria-disabled="true">Voice Chat · Disabled</button></div>
+      <div class="metric" style="padding-top:0"><b>Komunikasi tim</b></div>
       <div id="gameChatLog" class="game-chat-log" aria-live="polite"><div><b>Sistem:</b> Chat GAME aktif dengan moderasi.</div></div>
       <div class="quick-chat" aria-label="Quick Chat">
         <button type="button" class="btn soft" onclick="gameQuickChat('Serang sekarang!')">Serang!</button>
@@ -374,8 +370,8 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
         <button type="button" class="btn primary" onclick="gameSendChat()">Kirim</button>
       </div>
     </div>
-    <div class="notice" style="margin-top:10px"><b>Recall:</b> channeling 3 detik, batal jika bergerak atau terkena damage, lalu kembali ke base dan pulih. <b>Respawn:</b> hero yang kalah masuk countdown, muncul kembali di base dengan proteksi singkat. Demo kontrol berjalan lokal; pertandingan kompetitif tetap membutuhkan server untuk matchmaking, state bersama, reconnect, anti-cheat dan validasi hasil.</div>
-    <button class="btn primary" onclick="startGameDemo()">Mulai / ulang battle demo</button>
+    <div class="notice" style="margin-top:10px"><b>Recall:</b> diam selama 3 detik untuk kembali ke base dan memulihkan Hero. <b>Respawn:</b> Hero yang kalah akan kembali setelah hitung mundur.</div>
+    <button class="btn primary" onclick="startGameDemo()">Mulai / ulang battle</button>
     <button class="btn ghost" onclick="stopGameDemo();showOnly('game')">Balik</button>
   </section>
 
@@ -385,13 +381,6 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="metric"><span>EXP Arena</span><b>+0</b></div>
     <button class="btn primary" onclick="unlockReward('game')">Buka Reward Camera</button>
     <button class="btn ghost" onclick="goHome()">Home</button>
-  </section>
-
-  <section id="gameStore" class="card hidden">
-    <h2>Pembelian uang asli · Disabled</h2>
-    <div class="notice warn">Progression Portal dan perdagangan reward menggunakan KP. Pembelian dengan uang asli tidak aktif dan tidak diperlukan untuk menjalankan Portal/Arena pada versi ini.</div>
-    <button class="btn primary" onclick="showMarketplace()">Buka Marketplace KP</button>
-    <button class="btn ghost" onclick="showOnly('game')">Balik</button>
   </section>
 
   <section id="rewardCamera" class="card hidden">
@@ -405,9 +394,9 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
       <button id="snapBtn" class="btn primary" onclick="takePhoto()">Ambil foto</button>
     </div>
     <div id="rewardEdit" class="hidden">
-      <div class="notice"><b>Foto adaptif:</b> sistem menilai apakah foto berupa wajah, beberapa wajah, makanan, produk, alam, kendaraan, objek atau scene. Jika bukan wajah, STYLE menyesuaikan objek/scene.</div>
+      <div class="notice"><b>Foto adaptif:</b> STYLE menyesuaikan isi foto secara otomatis.</div>
       <label class="small">Atau pilih foto dari perangkat<input id="rewardFile" type="file" accept="image/*" onchange="loadRewardFile(event)"></label>
-      <div id="subjectHint" class="small">Subjek: belum dianalisis.</div>
+
       <h3>STYLE lokal</h3>
       <select id="rewardStyle" onchange="applyStylePreview()"></select>
       <div id="styleHint" class="small"></div>
@@ -424,9 +413,9 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
         <option value="visual">Visual</option>
       </select>
       <select id="aiTheme"></select>
-      <div class="notice">AI hanya untuk generative transform. Foto dipreproses/kompres di perangkat. Jika free quota habis, AI dinonaktifkan sementara; STYLE lokal tetap tersedia.</div>
+      <div class="notice">Pilih tema untuk mengubah tampilan foto. STYLE tetap tersedia kapan saja.</div>
 
-      <button class="btn soft" onclick="fakeAiTransform()">AI Transform (prototype)</button>
+      <button class="btn soft" onclick="fakeAiTransform()">Terapkan Transform</button>
       <button class="btn primary" onclick="fixReward()">FIX hasil</button>
       <button class="btn ghost" onclick="retakePhoto()">Foto ulang</button>
     </div>
@@ -441,9 +430,6 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <h2>Profil & Progression</h2>
     <div class="metric"><span>KP</span><b id="kpValue">0</b></div>
     <div class="metric"><span>Streak</span><b>0 hari</b></div>
-    <div class="metric"><span>Daily mission</span><b>Planned</b></div>
-    <div class="metric"><span>Leaderboard</span><b>Planned</b></div>
-    <div class="metric"><span>Recent activity</span><b>Local prototype</b></div>
   </section>
 
 </main>
@@ -475,5 +461,5 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 <script src="./klikfun-core-v13.js"></script>
 <script src="klikfun-game-v12.js"></script>
 </body>
-  </html>
-  
+          </html>
+    
