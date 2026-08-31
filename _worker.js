@@ -118,12 +118,20 @@ async function rewardAI(request,env,db){
 
   const safeVariation=String(subtheme||"").split(";")[0].slice(0,80);
 
+const cartoonMode=theme==="cartoon";
+
 const finalPrompt=
   identityRule+
-  " Create a family-friendly stylized image based on the reference photo. "+
-  (safeVariation?`Style: ${safeVariation}. `:"")+
-  "Keep clothing modest and age-appropriate. Preserve head coverings. Do not add text, logos, watermarks, extra people, duplicate faces, or distorted hands.";
-
+  (
+    cartoonMode
+      ?" Create a family-friendly illustrated transformation based on the reference photo. "
+      :" Edit the reference photo as a photorealistic photograph. Keep the same real person and the same recognizable face. Do not turn the person into a cartoon, anime, illustration, painting, drawing, 3D character, or avatar. "
+  )+
+  (safeVariation?`Theme: ${safeVariation}. `:"")+
+  "Apply the selected theme to clothing, setting, atmosphere, and appropriate accessories while preserving the person's facial identity. "+
+  "For sport themes, show a realistic athlete appropriate to the selected sport. "+
+  "Keep clothing modest and age-appropriate. Preserve head coverings exactly when present. "+
+  "Do not add text, logos, trademarks, watermarks, extra people, duplicate faces, or distorted hands.";
   const aiForm=new FormData();
   aiForm.append("input_image_0",image,image.name||"klikfun.jpg");
   aiForm.append("prompt",finalPrompt);
