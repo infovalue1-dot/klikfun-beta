@@ -506,3 +506,352 @@
     init();
   }
 })();
+/* Reward Camera final UI flow */
+(()=>{
+  function injectRewardStyles(){
+    if(document.getElementById("kfRewardUiStyle"))return;
+
+    const style=document.createElement("style");
+    style.id="kfRewardUiStyle";
+
+    style.textContent=`
+      .reward-choice-grid{
+        display:grid;
+        grid-template-columns:1fr 1fr;
+        gap:18px;
+        margin-top:18px;
+      }
+
+      .reward-choice{
+        border:1px solid var(--line);
+        border-radius:18px;
+        padding:16px;
+        background:#fff;
+      }
+
+      .reward-choice h3{
+        margin:0 0 12px;
+        font-size:18px;
+      }
+
+      .reward-choice select{
+        margin:6px 0;
+      }
+
+      .reward-choice .btn{
+        margin-top:12px;
+      }
+
+      .reward-file-pick{
+        margin-top:14px;
+        display:block;
+      }
+
+      .reward-retake{
+        margin-top:18px;
+      }
+
+      #rewardFixed{
+        margin-top:16px;
+      }
+
+      @media(max-width:520px){
+        .reward-choice-grid{
+          grid-template-columns:1fr;
+          gap:24px;
+        }
+
+        .reward-choice{
+          padding:15px;
+        }
+      }
+    `;
+
+    document.head.appendChild(style);
+  }
+
+  function buildRewardEditUI(){
+    const edit=document.getElementById("rewardEdit");
+
+    if(!edit)return;
+
+    edit.innerHTML=`
+      <label class="small reward-file-pick">
+        Pilih foto dari perangkat
+        <input
+          id="rewardFile"
+          type="file"
+          accept="image/*"
+          onchange="loadRewardFile(event)"
+        >
+      </label>
+
+      <div class="reward-choice-grid">
+
+        <div class="reward-choice">
+          <h3>Edit Foto</h3>
+
+          <select
+            id="rewardStyle"
+            onchange="applyStylePreview()"
+          ></select>
+
+          <div
+            id="styleHint"
+            class="small"
+          ></div>
+
+          <button
+            id="applyEditBtn"
+            class="btn primary"
+            type="button"
+          >
+            Terapkan
+          </button>
+        </div>
+                <div class="reward-choice">
+          <h3>AI Transform</h3>
+
+          <select
+            id="aiCategory"
+            onchange="renderAiThemes()"
+          >
+            <option value="beauty">Beauty</option>
+            <option value="fantasy">Fantasy</option>
+            <option value="geo">Historical / Geographic</option>
+            <option value="ninja">Ninja</option>
+            <option value="cartoon">Cartoon / Anime</option>
+            <option value="sport">Sport</option>
+            <option value="fun">Fun</option>
+            <option value="visual">Visual</option>
+          </select>
+
+          <select id="aiTheme"></select>
+
+          <button
+            id="applyAiBtn"
+            class="btn soft"
+            type="button"
+          >
+            Buat dengan AI
+          </button>
+        </div>
+
+      </div>
+
+      <button
+        id="rewardRetakeBtn"
+        class="btn ghost reward-retake"
+        type="button"
+        onclick="retakePhoto()"
+      >
+        Foto ulang
+      </button>
+    `;
+  }
+
+  function buildRewardFinalUI(){
+    const fixed=document.getElementById("rewardFixed");
+
+    if(!fixed)return;
+
+    fixed.innerHTML=`
+      <button
+        id="downloadBtn"
+        class="btn primary"
+        onclick="downloadReward()"
+      >
+        Download final sekali
+      </button>
+
+      <button
+        class="btn ghost"
+        onclick="goHome()"
+      >
+        Selesai
+      </button>
+    `;
+  }
+
+  function setChoiceLocked(locked){
+    [
+      "rewardStyle",
+      "aiCategory",
+      "aiTheme",
+      "applyEditBtn",
+      "applyAiBtn",
+      "rewardRetakeBtn",
+      "rewardFile"
+    ].forEach(id=>{
+      const el=document.getElementById(id);
+
+      if(el){
+        el.disabled=!!locked;
+      }
+    });
+      }
+    function showDownloadView(){
+    const edit=document.getElementById("rewardEdit");
+    const fixed=document.getElementById("rewardFixed");
+
+    if(edit){
+      edit.classList.add("hidden");
+    }
+
+    if(fixed){
+      fixed.classList.remove("hidden");
+    }
+
+    const camBtn=document.getElementById("camBtn");
+    const snapBtn=document.getElementById("snapBtn");
+    const switchBtn=document.getElementById("switchCameraBtn");
+
+    if(camBtn)camBtn.classList.add("hidden");
+    if(snapBtn)snapBtn.classList.add("hidden");
+    if(switchBtn)switchBtn.classList.add("hidden");
+
+    setTimeout(()=>{
+      const download=document.getElementById("downloadBtn");
+
+      if(download){
+        download.scrollIntoView({
+          behavior:"smooth",
+          block:"center"
+        });
+      }
+    },80);
+  }
+
+  async function applyEditFinal(){
+    if(
+      typeof rewardShot==="undefined" ||
+      !rewardShot ||
+      rewardFixed
+    ){
+      return;
+    }
+
+    setChoiceLocked(true);
+
+    try{
+      window.fixReward();
+
+      if(rewardFixed){
+        showDownloadView();
+      }else{
+        setChoiceLocked(false);
+      }
+
+    }catch(e){
+      setChoiceLocked(false);
+      alert("Foto belum dapat diterapkan. Coba lagi.");
+    }
+  }
+
+  async function applyAiFinal(){
+    if(
+      typeof rewardShot==="undefined" ||
+      !rewardShot ||
+      rewardFixed
+    ){
+      return;
+    }
+
+    const btn=document.getElementById("applyAiBtn");
+
+    setChoiceLocked(true);
+
+    if(btn){
+      btn.textContent="Memproses...";
+    }
+
+    try{
+      await window.fakeAiTransform();
+
+      if(rewardFixed){
+        showDownloadView();
+        return;
+      }
+
+      setChoiceLocked(false);
+
+      if(btn){
+        btn.textContent="Buat dengan AI";
+      }
+
+    }catch(e){
+      setChoiceLocked(false);
+
+      if(btn){
+        btn.textContent="Buat dengan AI";
+      }
+    }
+      }
+    function bindRewardButtons(){
+    const editBtn=document.getElementById("applyEditBtn");
+    const aiBtn=document.getElementById("applyAiBtn");
+
+    if(editBtn){
+      editBtn.onclick=applyEditFinal;
+    }
+
+    if(aiBtn){
+      aiBtn.onclick=applyAiFinal;
+    }
+  }
+
+  function resetRewardChoiceState(){
+    setChoiceLocked(false);
+
+    const aiBtn=document.getElementById("applyAiBtn");
+
+    if(aiBtn){
+      aiBtn.textContent="Buat dengan AI";
+    }
+  }
+
+  const previousUnlockReward=window.unlockReward;
+
+  window.unlockReward=function(source){
+    previousUnlockReward(source);
+
+    setTimeout(()=>{
+      resetRewardChoiceState();
+
+      if(typeof renderStyleOptions==="function"){
+        renderStyleOptions();
+      }
+
+      if(typeof renderAiThemes==="function"){
+        renderAiThemes();
+      }
+
+      bindRewardButtons();
+    },0);
+  };
+
+  function initRewardFinalUI(){
+    injectRewardStyles();
+    buildRewardEditUI();
+    buildRewardFinalUI();
+    bindRewardButtons();
+
+    if(typeof renderStyleOptions==="function"){
+      renderStyleOptions();
+    }
+
+    if(typeof renderAiThemes==="function"){
+      renderAiThemes();
+    }
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener(
+      "DOMContentLoaded",
+      initRewardFinalUI,
+      {once:true}
+    );
+  }else{
+    initRewardFinalUI();
+  }
+})();
