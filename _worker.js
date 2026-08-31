@@ -132,8 +132,20 @@ if(path==="/api/config"&&method==="GET")return json({session_ttl_hours:48,teleme
 function withSecurityHeaders(response){const headers=new Headers(response.headers);for(const[k,v]of Object.entries(securityHeaders()))headers.set(k,v);return new Response(response.body,{status:response.status,statusText:response.statusText,headers})}
 export default{async fetch(request,env){try{const url=new URL(request.url);if(url.pathname.startsWith("/api/")){const response=await api(request,env);if(response)return response}const assetResponse=await env.ASSETS.fetch(request);return withSecurityHeaders(assetResponse)}catch(e){
   if(new URL(request.url).pathname==="/api/reward-ai"){
-    console.error("Reward AI error",e);
-    return json({error:"AI Transform belum berhasil. Coba foto atau tema lain."},500);
-  }
+  const raw=String(e?.message||e||"");
+  const code=(raw.match(/\b\d{4}\b/)||[])[0]||"UNKNOWN";
+
+  console.error("Reward AI error",{
+    code,
+    name:String(e?.name||"Error"),
+    message:raw
+  });
+
+  return json({
+    error:"AI Transform gagal.",
+    debug_code:code,
+    debug_type:String(e?.name||"Error")
+  },500);
+}
   console.error("Klikfun worker error",e);const msg=String(e?.message||"");if(msg==="Payload terlalu besar"||msg==="JSON tidak valid"||msg==="Content-Type harus application/json")return json({error:msg},400);return json({error:"Terjadi gangguan server. Coba lagi."},500)}}};
   
