@@ -73,9 +73,9 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 @media(max-width:520px){.game-landscape{min-height:190px}.joy-zone{width:92px;height:92px;left:10px;bottom:10px}.joy-stick{left:29px;top:29px;width:34px;height:34px}.skill-zone{right:8px;bottom:8px;gap:5px}.skill-btn{width:44px;height:44px;font-size:9px}.skill-btn.ultimate{width:52px;height:52px}}
 
 .portal-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0}.portal-card{border:1px solid var(--line);border-radius:14px;padding:12px;background:rgba(255,255,255,.03);text-align:left}.portal-card.active{outline:2px solid var(--accent)}.portal-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:7px}.portal-tag{font-size:11px;padding:4px 7px;border-radius:999px;border:1px solid var(--line)}.portal-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.portal-board .metric{display:block}.portal-progress{height:9px;border:1px solid var(--line);border-radius:999px;overflow:hidden;margin:8px 0}.portal-progress>i{display:block;height:100%;background:var(--accent);width:0}.portal-map{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;margin:12px 0}.portal-node{min-height:42px;border-radius:10px;border:1px solid var(--line);display:grid;place-items:center;font-size:11px;padding:4px;text-align:center}.portal-node.done{opacity:.55}.portal-node.current{outline:2px solid var(--accent)}.portal-node.locked{opacity:.35}.inventory-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.inventory-item{border:1px solid var(--line);border-radius:12px;padding:10px}.npc-box{border-left:4px solid var(--accent);padding:10px 12px;background:rgba(255,255,255,.035);border-radius:10px}.guild-disabled{opacity:.62}.danger-chip{border-color:#9f3f3f}.portal-log{max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px;font-size:12px}.portal-log div+div{margin-top:6px}@media(max-width:620px){.portal-grid,.portal-board,.inventory-grid{grid-template-columns:1fr}.portal-map{grid-template-columns:repeat(4,1fr)}}
-
+  
 /* === Portal Action Runtime v5 === */
-  .portal-action-field{position:relative;min-height:420px;aspect-ratio:16/9;max-height:640px;overflow:hidden;border:1px solid var(--line);border-radius:16px;margin:10px 0;background:#182019;touch-action:none}
+.portal-action-field{position:relative;min-height:420px;aspect-ratio:16/9;max-height:640px;overflow:hidden;border:1px solid var(--line);border-radius:16px;margin:10px 0;background:#182019;touch-action:none}
 .portal-action-field[data-family="Verdant Portal"]{background:linear-gradient(155deg,#1a2b20,#334634 55%,#182119)}
 .portal-action-field[data-family="Abyss Portal"]{background:linear-gradient(155deg,#171821,#29283d 55%,#0e1017)}
 .portal-action-field[data-family="Frost Portal"]{background:linear-gradient(155deg,#dbe7ef,#9bb2c4 55%,#587284)}
@@ -137,15 +137,14 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 <main>
   <div class="top">
     <div class="brand">Klik<b>fun</b></div>
-    <span class="pill">Aman · device-first</span>
   </div>
 
   <section id="welcome" class="card hero">
     <span class="badge">Mulai di sini</span>
     <h1>Tebak. Main. Bukan wacana.</h1>
-    <p class="small">Klikfun adalah ruang hiburan ringan untuk tebak-teman, grup kecil, JANJI, GAME, dan reward kamera. Interaksi dibatasi pada aktivitas aman dan terstruktur. Chat teks hanya tersedia di GAME dengan moderasi; Voice Chat tetap dinonaktifkan. Tidak ada biaya tersembunyi.</p>
-    <button class="btn primary" onclick="enterGuest()">Lanjut sebagai Pengunjung</button>
-    <button class="btn ghost" onclick="showMemberGate()">Masuk / Daftar Member</button>
+    <p class="small">Main bareng, tebak teman, bikin janji, dan jelajahi GAME Klikfun.</p>
+    <button class="btn primary" onclick="showMemberGate()">Daftar / Masuk Member</button>
+    <button class="btn ghost" onclick="enterGuest()">Lanjut sebagai Pengunjung</button>
   </section>
 
   <section id="memberGate" class="card hidden">
@@ -161,9 +160,9 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
       <button class="action" onclick="startSelf()"><b>TEBAK</b><span>Jawab 7 pertanyaan tentang dirimu, lalu temanmu menebak lewat link.</span></button>
       <button class="action" onclick="showGroupSetup()"><b>GRUP</b><span>2–5 peserta. Pertanyaan berbeda untuk setiap peserta.</span></button>
       <button class="action" onclick="showJanji()"><b>JANJI</b><span>Pilih aktivitas dan waktu dari opsi aman Klikfun. Tanpa pesan bebas.</span></button>
-      <button class="action" onclick="showGame()"><b>GAME</b><span>Arena hero battle. Device-first, server hanya untuk sinkronisasi penting.</span></button>
+      <button class="action" onclick="showGame()"><b>GAME</b><span>Portal adventure dan Arena 5v5.</span></button>
     </div>
-    <div class="notice" style="margin-top:12px">Reward Camera tidak tersedia sebagai kamera gratis di Home. Reward terbuka setelah aktivitas yang memenuhi syarat.</div>
+    <div class="notice" style="margin-top:12px">Reward terbuka setelah aktivitas yang memenuhi syarat.</div>
   </section>
 
   <section id="quiz" class="card hidden">
@@ -178,8 +177,8 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <p class="small">Kirim link undangan. Tidak ada kode manual yang perlu diketik atau disalin.</p>
     <div class="share"><div class="small">LINK UNDANGAN</div><div id="shareUrl" style="word-break:break-all;margin-top:8px"></div></div>
     <button class="btn primary" onclick="shareInvite()">Kirim ke teman</button>
-         <button class="btn soft" onclick="copyInvite()">Salin link</button>
-    <button class="btn ghost" onclick="startFriendLocal()">Teman ada di sini</button>
+    <button class="btn soft" onclick="copyInvite()">Salin link</button>
+       <button class="btn ghost" onclick="startFriendLocal()">Teman ada di sini</button>
   </section>
 
   <section id="result" class="card hidden">
@@ -233,18 +232,17 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
   </section>
 
   <section id="game" class="card hidden">
-    <div class="metric"><div><b>GAME Klikfun</b><div class="small">Action-RPG Portal sebagai progression utama · Arena 5v5 sebagai mode kompetitif.</div></div><span class="badge">Device-first</span></div>
+    <div class="metric"><div><b>GAME Klikfun</b><div class="small">Action-RPG Portal sebagai progression utama · Arena 5v5 sebagai mode kompetitif.</div></div></div>
     <div class="grid2">
       <button class="action" onclick="showPortalHub()"><b>Portal Mission</b><span>Farming EXP, Skill Book, Artifact, senjata, material dan loot. Portal dapat berisi monster, boss, eksplorasi atau hanya loot.</span></button>
       <button class="action" onclick="showGameMode('multi')"><b>Arena 5v5</b><span>Battle kompetitif tanpa farming level/EXP di dalam pertandingan. Bot maksimal 60% dari 10 slot.</span></button>
       <button class="action" onclick="showMarketplace()"><b>Marketplace KP</b><span>Jual reward ke pemain lain atau jual cepat ke System dengan harga KP lebih rendah.</span></button>
-      <button class="action guild-disabled" disabled aria-disabled="true"><b>Guild · Disabled</b><span>Nantinya Guild Boss membutuhkan modal KP, merekrut Hero dan mengambil target Portal/Boss.</span></button>
+      <button class="action guild-disabled" disabled aria-disabled="true"><b>Guild · Disabled</b></button>
     </div>
     <h3>Progression</h3>
     <div class="tabs"><span class="tab">Portal</span><span class="tab">Boss Portal</span><span class="tab">Portal Break</span><span class="tab">Skill Book</span><span class="tab">Artifact</span><span class="tab">Weapon</span><span class="tab">KP Marketplace</span></div>
     <h3>Kontrol battle</h3>
     <div class="notice ok">Landscape · gerak bebas joystick 360° di kiri · ATK/skill/ultimate/Recall di kanan · respawn untuk Arena · Quick Chat dan text chat dimoderasi · Voice Chat disabled.</div>
-    <div class="game-disclaimer">GAME Klikfun merupakan cerita fiktif. Pengembangan karakter, nama, cerita, dunia, map, visual, ikon, skill, efek, suara, senjata, item dan aset harus menjauhi pelanggaran hak cipta, merek dan kekayaan intelektual pihak lain.</div>
   </section>
 
   <section id="portalHub" class="card hidden">
@@ -319,10 +317,10 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 
   <section id="heroCollection" class="card hidden"><div class="metric"><div><b>Hero Collection</b><div class="small">2 Hero awal dibagikan random-terkontrol sekali per profil dan permanen. Hero lain dibuka bertahap dari bermain.</div></div><span id="heroOwnedBadge" class="badge">2 Hero</span></div><div id="heroUnlockProgress" class="hero-profile-card"></div><div id="heroRosterGrid" class="hero-roster-grid" style="margin-top:10px"></div><button class="btn ghost" onclick="showOnly('gameMode');gameApplyLoadout()">Balik ke Arena</button></section>
 
-     <section id="heroDiscovery" class="card hidden"><div class="metric"><div><b>Hero Discovery</b><div class="small">Saat kesempatan terbuka, pilih 1 dari 3 Hero.</div></div><span id="heroDiscoveryBadge" class="badge">Belum tersedia</span></div><div id="heroDiscoveryInfo" class="hero-profile-card"></div><div id="heroDiscoveryChoices" class="hero-discovery-grid"></div><button class="btn ghost" onclick="showHeroCollection()">Balik ke Collection</button></section>
+  <section id="heroDiscovery" class="card hidden"><div class="metric"><div><b>Hero Discovery</b><div class="small">Saat kesempatan terbuka, pilih 1 dari 3 Hero.</div></div><span id="heroDiscoveryBadge" class="badge">Belum tersedia</span></div><div id="heroDiscoveryInfo" class="hero-profile-card"></div><div id="heroDiscoveryChoices" class="hero-discovery-grid"></div><button class="btn ghost" onclick="showHeroCollection()">Balik ke Collection</button></section>
 
   <section id="marketplace" class="card hidden">
-    <div class="metric"><div><b>Marketplace KP</b><div class="small">Tidak menggunakan uang asli untuk jual-beli reward Portal.</div></div><span id="marketKP" class="badge">0 KP</span></div>
+       <div class="metric"><div><b>Marketplace KP</b><div class="small">Tidak menggunakan uang asli untuk jual-beli reward Portal.</div></div><span id="marketKP" class="badge">0 KP</span></div>
     <h3>Inventory</h3><div id="marketInventory" class="inventory-grid"></div>
     <h3>Listing pemain</h3><div id="marketListings" class="inventory-grid"></div>
     <div class="notice">Jual ke System = cepat tetapi harga KP lebih rendah. Listing ke pemain = pemilik menentukan harga KP. Vendor promo/voucher tidak otomatis dapat diperdagangkan.</div>
@@ -448,9 +446,6 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="metric"><span>Recent activity</span><b>Local prototype</b></div>
   </section>
 
-  <div class="footer">
-    <span>Zero-cost target selama berada di free tier. Fitur yang berpotensi berbayar tetap OFF sampai diaktifkan secara resmi.</span>
-  </div>
 </main>
 
 <div id="reportModal" class="modal hidden">
@@ -480,5 +475,5 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 <script src="./klikfun-core-v13.js"></script>
 <script src="klikfun-game-v12.js"></script>
 </body>
-                                                                            </html>
+  </html>
   
