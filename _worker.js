@@ -116,12 +116,13 @@ async function rewardAI(request,env,db){
     ?"Preserve every person's recognizable facial identity, approximate age, skin tone, and position. Keep all people visible."
     :"Preserve the person's recognizable facial identity, approximate age, skin tone, and key facial features.";
 
-  const finalPrompt=
-    identityRule+
-    " Use the uploaded image only as the identity and composition reference. "+
-    basePrompt+
-    (subtheme?` Specific variation: ${subtheme}.`:"")+
-    " Do not add text, logos, watermarks, extra people, duplicate faces, or distorted hands.";
+  const safeVariation=String(subtheme||"").split(";")[0].slice(0,80);
+
+const finalPrompt=
+  identityRule+
+  " Create a family-friendly stylized image based on the reference photo. "+
+  (safeVariation?`Style: ${safeVariation}. `:"")+
+  "Keep clothing modest and age-appropriate. Preserve head coverings. Do not add text, logos, watermarks, extra people, duplicate faces, or distorted hands.";
 
   const aiForm=new FormData();
   aiForm.append("input_image_0",image,image.name||"klikfun.jpg");
