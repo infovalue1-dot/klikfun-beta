@@ -24,13 +24,19 @@
   function openRewardCamera(){
     if(!isOwner())return;
 
-    if(typeof window.unlockReward!=="function"){
-      alert("Reward Camera belum dapat dibuka.");
-      return;
-    }
+    localStorage.setItem(
+      "kf_reward_entitlement_v2",
+      JSON.stringify({
+        source:"owner",
+        grantedAt:Date.now(),
+        expiresAt:Date.now()+3600000,
+        used:false,
+        downloaded:false
+      })
+    );
 
-    window.unlockReward("akses khusus");
-  }
+    window.unlockReward("owner");
+}
 
   async function requestOwnerAccess(){
     if(isOwner()){
