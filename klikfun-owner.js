@@ -855,3 +855,47 @@
     initRewardFinalUI();
   }
 })();
+/* Reward Camera public UI cleanup */
+(()=>{
+  function cleanRewardUi(){
+    document
+      .querySelectorAll(".reward-file-pick")
+      .forEach(el=>el.remove());
+
+    const hint=document.getElementById("styleHint");
+    if(hint){
+      hint.style.display="none";
+    }
+
+    const grid=document.querySelector(".reward-choice-grid");
+    if(grid){
+      grid.style.marginTop="10px";
+    }
+  }
+
+  function init(){
+    cleanRewardUi();
+
+    const edit=document.getElementById("rewardEdit");
+
+    if(edit){
+      new MutationObserver(cleanRewardUi).observe(
+        edit,
+        {
+          childList:true,
+          subtree:true
+        }
+      );
+    }
+  }
+
+  if(document.readyState==="loading"){
+    document.addEventListener(
+      "DOMContentLoaded",
+      init,
+      {once:true}
+    );
+  }else{
+    init();
+  }
+})();
