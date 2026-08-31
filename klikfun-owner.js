@@ -2,7 +2,10 @@
 (()=>{
   const OWNER_KEY_HASH="b8c578b24888a582381613cc741b0402ce4febe4c8d66ad1c12be365d8f5febc";
   const OWNER_FLAG="kf_owner_reward_v1";
-  const $=id=>document.getElementById(id);
+  const TAP_COUNT=5;
+  const TAP_WINDOW_MS=3500;
+
+  let taps=[];
 
   async function sha256(v){
     const d=await crypto.subtle.digest(
@@ -18,25 +21,6 @@
     return localStorage.getItem(OWNER_FLAG)==="1";
   }
 
-  async function activateFromUrl(){
-    const u=new URL(location.href);
-    if(u.searchParams.get("owner")!=="1")return;
-
-    u.searchParams.delete("owner");
-    history.replaceState(null,"",u.pathname+(u.search?u.search:"")+u.hash);
-
-    const key=prompt("Masukkan kunci akses pemilik.");
-    if(!key)return;
-
-    if(await sha256(key)!==OWNER_KEY_HASH){
-      alert("Kunci akses tidak cocok.");
-      return;
-    }
-
-    localStorage.setItem(OWNER_FLAG,"1");
-    installButton();
-  }
-
   function openRewardCamera(){
     if(!isOwner())return;
 
@@ -48,30 +32,48 @@
     window.unlockReward("akses khusus");
   }
 
-  function installButton(){
-    if(!isOwner()||$("ownerRewardCameraBtn"))return;
+  async function requestOwnerAccess(){
+    if(isOwner()){
+      openRewardCamera();
+      return;
+    }
 
-    const b=document.createElement("button");
-    b.id="ownerRewardCameraBtn";
-    b.type="button";
-    b.className="btn primary";
-    b.textContent="Reward Camera";
-    b.setAttribute("aria-label","Buka Reward Camera");
+    const key=prompt("Masukkan kunci akses pemilik.");
+    if(!key)return;
 
-    b.style.position="fixed";
-    b.style.right="16px";
-    b.style.bottom="84px";
-    b.style.zIndex="9999";
-    b.style.width="auto";
-    b.style.maxWidth="180px";
+    if(await sha256(key)!==OWNER_KEY_HASH){
+      alert("Kunci akses tidak cocok.");
+      return;
+    }
 
-    b.onclick=openRewardCamera;
-    document.body.appendChild(b);
+    localStorage.setItem(OWNER_FLAG,"1");
+    openRewardCamera();
+  }
+
+  function onBrandTap(){
+    const now=Date.now();
+
+    taps=taps.filter(t=>now-t<=TAP_WINDOW_MS);
+    taps.push(now);
+
+    if(taps.length>=TAP_COUNT){
+      taps=[];
+      requestOwnerAccess();
+    }
+  }
+
+  function installHiddenTrigger(){
+    const brand=document.querySelector(".brand");
+
+    if(!brand || brand.dataset.ownerTrigger==="1")return;
+
+    brand.dataset.ownerTrigger="1";
+    brand.addEventListener("click",onBrandTap);
   }
 
   function disableOwner(){
     localStorage.removeItem(OWNER_FLAG);
-    $("ownerRewardCameraBtn")?.remove();
+    taps=[];
   }
 
   window.KF_OWNER={
@@ -80,13 +82,17 @@
     disable:disableOwner
   };
 
+  function init(){
+    installHiddenTrigger();
+  }
+
   if(document.readyState==="loading"){
-    document.addEventListener("DOMContentLoaded",()=>{
-      installButton();
-      activateFromUrl();
-    },{once:true});
+    document.addEventListener(
+      "DOMContentLoaded",
+      init,
+      {once:true}
+    );
   }else{
-    installButton();
-    activateFromUrl();
+    init();
   }
 })();
