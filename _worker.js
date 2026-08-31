@@ -32,7 +32,7 @@ async function ensureSchema(db){if(!schemaReady){schemaReady=db.batch([
  db.prepare(`CREATE INDEX IF NOT EXISTS idx_reports_code ON reports(code)`),
  db.prepare(`CREATE TABLE IF NOT EXISTS events (id INTEGER PRIMARY KEY AUTOINCREMENT,event TEXT NOT NULL,code TEXT,parent_code TEXT,meta TEXT,created_at INTEGER NOT NULL)`),
  db.prepare(`CREATE INDEX IF NOT EXISTS idx_events_created ON events(created_at)`),
- db.prepare(`CREATE TABLE IF NOT EXISTS rate_limits (bucket TEXT NOT NULL,actor TEXT NOT NULL,count INTEGER NOT NULL,expires_at INTEGER NOT NULL,PRIMARY KEY(bucket,actor))`),
+  db.prepare(`CREATE TABLE IF NOT EXISTS rate_limits (bucket TEXT NOT NULL,actor TEXT NOT NULL,count INTEGER NOT NULL,expires_at INTEGER NOT NULL,PRIMARY KEY(bucket,actor))`),
  db.prepare(`CREATE INDEX IF NOT EXISTS idx_rate_limits_expires ON rate_limits(expires_at)`),
  db.prepare(`CREATE TABLE IF NOT EXISTS groups (code TEXT PRIMARY KEY,size INTEGER NOT NULL,admin_hash TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active',created_at INTEGER NOT NULL,expires_at INTEGER NOT NULL)`),
  db.prepare(`CREATE INDEX IF NOT EXISTS idx_groups_expires ON groups(expires_at)`),
@@ -45,7 +45,7 @@ async function actorKey(request,env){const ip=request.headers.get("CF-Connecting
 async function rateLimit(request,env,db,name,limit,windowSec){const actor=await actorKey(request,env),now=nowSec(),bucket=`${name}:${Math.floor(now/windowSec)}`;const row=await db.prepare(`SELECT count,expires_at FROM rate_limits WHERE bucket=? AND actor=?`).bind(bucket,actor).first();if(row&&row.expires_at>now&&row.count>=limit)return json({error:"Terlalu banyak percobaan. Coba lagi sebentar."},429,{"Retry-After":String(Math.max(1,row.expires_at-now))});const expires=(Math.floor(now/windowSec)+1)*windowSec;await db.prepare(`INSERT INTO rate_limits(bucket,actor,count,expires_at) VALUES(?,?,1,?) ON CONFLICT(bucket,actor) DO UPDATE SET count=count+1,expires_at=excluded.expires_at`).bind(bucket,actor,expires).run();return null}
 function sanitizeMeta(meta){if(!meta||typeof meta!=="object"||Array.isArray(meta))return{};const allowed=new Set(["channel","theme","source","mode"]),out={};for(const[k,v]of Object.entries(meta)){if(!allowed.has(k))continue;if(typeof v==="string")out[k]=v.slice(0,80);else if(typeof v==="number"&&Number.isFinite(v))out[k]=v;else if(typeof v==="boolean")out[k]=v}return out}
 function constantTimeEqualHex(a,b){if(typeof a!=="string"||typeof b!=="string"||a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0}
-async function createSession(request,env,db){const limited=await rateLimit(request,env,db,"create_session",10,600);if(limited)return limited;const body=await readJson(request),questions=body.questions,answers=body.answers;if(body.consent!==true)return json({error:"Persetujuan diperlukan"},400);if(!validateQuestions(questions))return json({error:"Pertanyaan ronde tidak valid"},400);if(!validateAnswers(questions,answers))return json({error:"Jawaban ronde tidak valid"},400);const parentCode=body.parent_code?safeCode(body.parent_code):null,deleteKey=randomToken(),deleteHash=await sha256Hex(deleteKey),created=nowSec(),expires=created+SESSION_TTL_SECONDS;await maybeCleanup(db);for(let attempt=0;attempt<12;attempt++){const code=randomCode();try{await db.prepare(`INSERT INTO sessions(code,questions,answers,parent_code,delete_hash,status,created_at,expires_at) VALUES(?,?,?,?,?,'active',?,?)`).bind(code,JSON.stringify(questions),JSON.stringify(answers),parentCode,deleteHash,created,expires).run();return json({code,delete_key:deleteKey,expires_at:expires,expires_in_seconds:SESSION_TTL_SECONDS},201)}catch(e){if(!String(e?.message||e).toLowerCase().includes("unique"))throw e}}return json({error:"Gagal membuat kode unik. Coba lagi."},503)}
+ async function createSession(request,env,db){const limited=await rateLimit(request,env,db,"create_session",10,600);if(limited)return limited;const body=await readJson(request),questions=body.questions,answers=body.answers;if(body.consent!==true)return json({error:"Persetujuan diperlukan"},400);if(!validateQuestions(questions))return json({error:"Pertanyaan ronde tidak valid"},400);if(!validateAnswers(questions,answers))return json({error:"Jawaban ronde tidak valid"},400);const parentCode=body.parent_code?safeCode(body.parent_code):null,deleteKey=randomToken(),deleteHash=await sha256Hex(deleteKey),created=nowSec(),expires=created+SESSION_TTL_SECONDS;await maybeCleanup(db);for(let attempt=0;attempt<12;attempt++){const code=randomCode();try{await db.prepare(`INSERT INTO sessions(code,questions,answers,parent_code,delete_hash,status,created_at,expires_at) VALUES(?,?,?,?,?,'active',?,?)`).bind(code,JSON.stringify(questions),JSON.stringify(answers),parentCode,deleteHash,created,expires).run();return json({code,delete_key:deleteKey,expires_at:expires,expires_in_seconds:SESSION_TTL_SECONDS},201)}catch(e){if(!String(e?.message||e).toLowerCase().includes("unique"))throw e}}return json({error:"Gagal membuat kode unik. Coba lagi."},503)}
 async function getSession(request,env,code,db){const limited=await rateLimit(request,env,db,"get_session",60,600);if(limited)return limited;const row=await db.prepare(`SELECT code,questions,parent_code,created_at,expires_at FROM sessions WHERE code=? AND status='active' AND expires_at>?`).bind(code,nowSec()).first();if(!row)return json({error:"Kode tidak ditemukan atau sudah kedaluwarsa"},404);return json({code:row.code,questions:JSON.parse(row.questions),parent_code:row.parent_code||null,created_at:row.created_at,expires_at:row.expires_at})}
 async function submitGuess(request,env,code,db){const limited=await rateLimit(request,env,db,"guess",60,600);if(limited)return limited;const body=await readJson(request,8192),guesses=body.guesses;if(!isIntArray7(guesses))return json({error:"Tebakan harus berisi 7 jawaban"},400);const row=await db.prepare(`SELECT questions,answers FROM sessions WHERE code=? AND status='active' AND expires_at>?`).bind(code,nowSec()).first();if(!row)return json({error:"Ronde tidak ditemukan atau sudah kedaluwarsa"},404);const questions=JSON.parse(row.questions),answers=JSON.parse(row.answers);if(!validateAnswers(questions,guesses))return json({error:"Format tebakan tidak valid"},400);let score=0;const misses=[];for(let i=0;i<7;i++){if(guesses[i]===answers[i])score++;else misses.push(i)}return json({score,misses})}
 async function deleteSession(request,env,code,db){const limited=await rateLimit(request,env,db,"delete",12,3600);if(limited)return limited;const body=await readJson(request,4096),key=String(body.delete_key||"");if(!key||key.length>128)return json({error:"Kunci hapus diperlukan"},400);const row=await db.prepare(`SELECT delete_hash,status FROM sessions WHERE code=?`).bind(code).first();if(!row||row.status!=="active")return json({error:"Ronde tidak ditemukan"},404);if(!constantTimeEqualHex(await sha256Hex(key),row.delete_hash))return json({error:"Kunci hapus tidak cocok"},403);await db.prepare(`UPDATE sessions SET status='deleted',questions='[]',answers='[]',expires_at=? WHERE code=?`).bind(nowSec(),code).run();return json({ok:true})}
@@ -55,125 +55,85 @@ async function createGroup(request,env,db){const limited=await rateLimit(request
 async function getGroupAdmin(request,env,code,db){const limited=await rateLimit(request,env,db,"group_status",90,600);if(limited)return limited;const url=new URL(request.url),key=String(url.searchParams.get("admin_key")||"");if(!TOKEN_RE.test(key))return json({error:"Kunci grup tidak valid"},403);const g=await db.prepare(`SELECT size,admin_hash,expires_at FROM groups WHERE code=? AND status='active' AND expires_at>?`).bind(code,nowSec()).first();if(!g)return json({error:"Grup tidak ditemukan atau sudah kedaluwarsa"},404);if(!constantTimeEqualHex(await sha256Hex(key),g.admin_hash))return json({error:"Kunci grup tidak cocok"},403);const rows=await db.prepare(`SELECT slot,status,completed_at FROM group_participants WHERE group_code=? ORDER BY slot`).bind(code).all();return json({code,size:g.size,expires_at:g.expires_at,participants:(rows.results||[]).map(r=>({slot:r.slot,completed:r.status==="completed",completed_at:r.completed_at||null}))})}
 async function getGroupParticipant(request,env,code,slot,db){const limited=await rateLimit(request,env,db,"group_join",90,600);if(limited)return limited;const token=String(new URL(request.url).searchParams.get("token")||"");if(!TOKEN_RE.test(token))return json({error:"Undangan grup tidak valid"},403);const g=await db.prepare(`SELECT size,expires_at FROM groups WHERE code=? AND status='active' AND expires_at>?`).bind(code,nowSec()).first();if(!g)return json({error:"Grup tidak ditemukan atau sudah kedaluwarsa"},404);const p=await db.prepare(`SELECT token_hash,questions,status FROM group_participants WHERE group_code=? AND slot=?`).bind(code,slot).first();if(!p||!constantTimeEqualHex(await sha256Hex(token),p.token_hash))return json({error:"Undangan peserta tidak valid"},403);return json({code,slot,size:g.size,questions:JSON.parse(p.questions),completed:p.status==="completed",expires_at:g.expires_at})}
 async function submitGroupParticipant(request,env,code,slot,db){const limited=await rateLimit(request,env,db,"group_submit",30,600);if(limited)return limited;const body=await readJson(request,8192),token=String(body.token||""),answers=body.answers;if(!TOKEN_RE.test(token))return json({error:"Token peserta tidak valid"},403);const g=await db.prepare(`SELECT size FROM groups WHERE code=? AND status='active' AND expires_at>?`).bind(code,nowSec()).first();if(!g)return json({error:"Grup tidak ditemukan atau sudah kedaluwarsa"},404);const p=await db.prepare(`SELECT token_hash,questions,status FROM group_participants WHERE group_code=? AND slot=?`).bind(code,slot).first();if(!p||!constantTimeEqualHex(await sha256Hex(token),p.token_hash))return json({error:"Token peserta tidak cocok"},403);if(p.status==="completed"){const c=await db.prepare(`SELECT COUNT(*) AS n FROM group_participants WHERE group_code=? AND status='completed'`).bind(code).first();return json({ok:true,completed_count:Number(c.n||0),size:g.size})}const qs=JSON.parse(p.questions);if(!validateAnswers(qs,answers))return json({error:"Jawaban grup tidak valid"},400);await db.prepare(`UPDATE group_participants SET answers=?,status='completed',completed_at=? WHERE group_code=? AND slot=? AND status='waiting'`).bind(JSON.stringify(answers),nowSec(),code,slot).run();const c=await db.prepare(`SELECT COUNT(*) AS n FROM group_participants WHERE group_code=? AND status='completed'`).bind(code).first();return json({ok:true,completed_count:Number(c.n||0),size:g.size})}
+
 async function rewardAI(request,env,db){
-  if(!env.AI){
-    return json({error:"Workers AI belum terhubung. Binding harus bernama AI."},503);
-  }
-
-  const limited=await rateLimit(request,env,db,"reward_ai",10,3600);
-  if(limited)return limited;
-
+  if(!env.AI)return json({error:"AI belum tersedia."},503);
+   const limited=await rateLimit(request,env,db,"reward_ai",10,3600);if(limited)return limited;
   const type=String(request.headers.get("content-type")||"").toLowerCase();
-  if(!type.includes("multipart/form-data")){
-    return json({error:"Foto harus dikirim sebagai multipart/form-data"},400);
-  }
+  if(!type.includes("multipart/form-data"))return json({error:"Foto tidak valid."},400);
 
   const form=await request.formData();
   const image=form.get("image");
-  const theme=String(form.get("theme")||"cinematic").toLowerCase().slice(0,30);
-  const subtheme=String(form.get("subtheme")||"").slice(0,80);
+  const theme=String(form.get("theme")||"visual").toLowerCase().slice(0,30);
+  const rawSubtheme=String(form.get("subtheme")||"").slice(0,100);
   const mode=String(form.get("mode")||"solo")==="group"?"group":"solo";
+  const subjectType=String(form.get("subject_type")||"face").slice(0,24);
 
-  if(!(image instanceof File)){
-    return json({error:"Foto tidak ditemukan"},400);
-  }
-
-  if(image.size>2*1024*1024){
-    return json({error:"Ukuran foto terlalu besar"},413);
-  }
-
+  if(!(image instanceof File))return json({error:"Foto tidak ditemukan"},400);
+  if(image.size>4*1024*1024)return json({error:"Ukuran foto terlalu besar"},413);
   const allowedTypes=new Set(["image/jpeg","image/png","image/webp"]);
-  if(!allowedTypes.has(image.type)){
-    return json({error:"Format foto harus JPG, PNG, atau WEBP"},400);
-  }
+  if(!allowedTypes.has(String(image.type||"").toLowerCase()))return json({error:"Format foto harus JPG, PNG, atau WEBP"},400);
 
-  const prompts={
-    pusing:
-      "Transform the people in the reference image into a funny dizzy character scene, exaggerated confused expression, playful swirling visual elements, polished portrait photography.",
-    cemberut:
-      "Transform the people in the reference image into a humorous dramatic sulking character, expressive face, playful cinematic scene.",
-    wibawa:
-      "Transform the people in the reference image into a confident distinguished character portrait, authoritative expression, elegant clothing, premium cinematic lighting.",
-    executive:
-      "Transform the people in the reference image into stylish senior executives, sophisticated business wardrobe, premium office atmosphere, cinematic portrait.",
-    gothic:
-      "Transform the people in the reference image into elegant gothic characters, dramatic dark wardrobe, mysterious atmospheric scene, cinematic lighting.",
-    komedi:
-      "Transform the people in the reference image into funny comedy characters, expressive faces, playful costumes and props, polished humorous scene.",
-    misterius:
-      "Transform the people in the reference image into mysterious cinematic characters, dramatic shadows, subtle fog, intriguing expression and atmosphere.",
-    royal:
-      "Transform the people in the reference image into elegant royal characters, luxurious ceremonial clothing, palace-inspired setting, cinematic portrait.",
-    retro:
-      "Transform the people in the reference image into stylish retro characters, authentic vintage wardrobe and environment, polished period photography.",
-    cinematic:
-      "Transform the people in the reference image into dramatic movie characters, cinematic wardrobe, expressive face, film-quality lighting and environment."
+  const allowedThemes=new Set(["beauty","fantasy","geo","ninja","cartoon","sport","fun","visual"]);
+  if(!allowedThemes.has(theme))return json({error:"Tema AI tidak valid."},400);
+
+  const safeVariation=rawSubtheme
+    .replace(/[^\p{L}\p{N}\s\-/'&]/gu," ")
+    .replace(/\s+/g," ")
+    .trim()
+    .slice(0,72);
+
+  const maxFaces=mode==="group"?5:1;
+  const hasFace=subjectType==="face"||subjectType==="multi_face";
+  const identityRule=hasFace
+    ?(mode==="group"
+      ?`Keep every person recognizably the same individual and keep the same number of people, maximum ${maxFaces}. Identity must remain recognizable, but faces may be naturally restyled, groomed, relit and re-expressed for the transformation.`
+      :"Keep the subject recognizably the same individual. Preserve core likeness and distinctive features, but do not freeze the original face; natural skin refinement, grooming, expression, angle and flattering relighting are allowed.")
+    :`Transform the actual ${subjectType} content from the reference image and do not invent an unrelated person.`;
+
+  const categoryPrompt={
+    beauty:"Create a high-end photorealistic beauty/editorial transformation. Make the subject noticeably more polished and photogenic with natural skin refinement, flattering facial light, refined detail, grooming and styling.",
+    sport:"Create a cinematic photorealistic athlete transformation for the selected sport persona. Reimagine pose, expression, grooming, wardrobe, athletic presentation, camera angle, lighting and environment so the subject truly becomes that sport character.",
+    fantasy:"Create a cinematic photorealistic fantasy-character transformation. Reimagine styling, costume, hair or grooming when appropriate, pose, expression, lighting, environment and atmosphere while keeping the person recognizable.",
+    geo:"Create a cinematic historical or geographic character transformation appropriate to the selected theme. Reimagine wardrobe, grooming, pose, expression, lighting and environment without copying protected characters.",
+    ninja:"Create a cinematic photorealistic ninja-character transformation. Reimagine wardrobe, pose, expression, grooming, lighting, action and environment so it feels like a complete character transformation.",
+    cartoon:"Create a polished illustrated character transformation in the selected style. Preserve recognizable likeness while freely adapting expression, pose, costume and scene.",
+    fun:"Create a playful full-character transformation matching the selected theme. Change expression, pose, styling and scene clearly while keeping the person recognizable and respectful.",
+    visual:"Create a cinematic full-character visual transformation matching the selected theme. Reimagine styling, pose, expression, lighting, camera treatment and environment while preserving recognizable identity."
   };
 
-  const basePrompt=prompts[theme]||prompts.cinematic;
+  const finalPrompt=
+    identityRule+" "+
+    categoryPrompt[theme]+" "+
+    (safeVariation?`Selected theme: ${safeVariation}. `:"")+
+    "The final image should look intentionally transformed, not like the original photo with only a new background. Keep clothing modest and age-appropriate. Preserve hijab or other head coverings when present. No sexualized styling, text, logos, watermarks, extra people, duplicate faces or distorted hands.";
 
-  const identityRule=mode==="group"
-    ?"Preserve every person's recognizable facial identity, approximate age, skin tone, and position. Keep all people visible."
-    :"Preserve the person's recognizable facial identity, approximate age, skin tone, and key facial features.";
-
-  const safeVariation=String(subtheme||"").split(";")[0].slice(0,80);
-
-const cartoonMode=theme==="cartoon";
-
-const finalPrompt=
-  identityRule+
-  " Photorealistic photo edit of the same person. "+
-  (safeVariation?`Theme: ${safeVariation}. `:"")+
-  "Keep the same recognizable face, age and skin tone. "+
-  "Apply the theme mainly to clothing and background. "+
-  "Keep clothing modest. Preserve head coverings. "+
-  "No text, logos, extra people or duplicate faces.";
   const aiForm=new FormData();
   aiForm.append("input_image_0",image,image.name||"klikfun.jpg");
-  aiForm.append("prompt",finalPrompt);
+    aiForm.append("prompt",finalPrompt);
   aiForm.append("width","512");
   aiForm.append("height","512");
 
   const serialized=new Response(aiForm);
-  const result=await env.AI.run(
-    "@cf/black-forest-labs/flux-2-klein-4b",
-    {
-      multipart:{
-        body:serialized.body,
-        contentType:serialized.headers.get("content-type")
-      }
-    }
-  );
-
-  if(!result||!result.image){
-    console.error("Reward AI invalid result",result);
-    return json({error:"AI belum berhasil membuat gambar. Coba lagi."},502);
-  }
-
-  const binary=atob(result.image);
-  const bytes=new Uint8Array(binary.length);
-  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
-
-  return new Response(bytes,{
-    status:200,
-    headers:{
-      "Content-Type":"image/png",
-      "Cache-Control":"no-store",
-      ...securityHeaders()
-    }
+  const result=await env.AI.run("@cf/black-forest-labs/flux-2-klein-4b",{
+    multipart:{body:serialized.body,contentType:serialized.headers.get("content-type")}
   });
-  }
+
+  if(!result||!result.image){console.error("Reward AI invalid result",result);return json({error:"AI belum berhasil membuat gambar. Coba lagi."},502)}
+  const binary=atob(result.image),bytes=new Uint8Array(binary.length);
+  for(let i=0;i<binary.length;i++)bytes[i]=binary.charCodeAt(i);
+  return new Response(bytes,{status:200,headers:{"Content-Type":"image/png","Cache-Control":"no-store",...securityHeaders()}});
+}
 
 async function api(request,env){const memberResponse=await handleMember(request,env);
 if(memberResponse)return memberResponse;if(!env.DB)return json({error:"Database belum terhubung. Tambahkan D1 binding dengan nama DB pada project Cloudflare Pages."},503);await ensureSchema(env.DB);const url=new URL(request.url),path=url.pathname,method=request.method.toUpperCase();
-                                if(path==="/api/reward-ai"&&method==="POST")return rewardAI(request,env,env.DB);
-                                if(path==="/api/config"&&method==="GET")return json({session_ttl_hours:48,telemetry_retention_days:30,max_group_people:5,public_reward_themes:10,photo_ttl_hours:5,group_sync:true});if(path==="/api/session"&&method==="POST")return createSession(request,env,env.DB);if(path==="/api/group"&&method==="POST")return createGroup(request,env,env.DB);let m=path.match(/^\/api\/group\/([A-Z2-9]{6})$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getGroupAdmin(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/group\/([A-Z2-9]{6})\/participant\/([1-5])$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getGroupParticipant(request,env,c,Number(m[2]),env.DB):json({error:"Kode tidak valid"},400)}if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitGroupParticipant(request,env,c,Number(m[2]),env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/session\/([A-Z2-9]{6})$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getSession(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/session\/([A-Z2-9]{6})\/delete$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?deleteSession(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/guess\/([A-Z2-9]{6})$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitGuess(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/report\/([A-Z2-9]{6})$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitReport(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}if(path==="/api/event"&&method==="POST")return submitEvent(request,env,env.DB);if(path.startsWith("/api/"))return json({error:"Endpoint tidak ditemukan"},404);return null}
+if(path==="/api/reward-ai"&&method==="POST")return rewardAI(request,env,env.DB);
+if(path==="/api/config"&&method==="GET")return json({session_ttl_hours:48,telemetry_retention_days:30,max_group_people:5,public_reward_themes:10,photo_ttl_hours:5,group_sync:true});if(path==="/api/session"&&method==="POST")return createSession(request,env,env.DB);if(path==="/api/group"&&method==="POST")return createGroup(request,env,env.DB);let m=path.match(/^\/api\/group\/([A-Z2-9]{6})$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getGroupAdmin(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/group\/([A-Z2-9]{6})\/participant\/([1-5])$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getGroupParticipant(request,env,c,Number(m[2]),env.DB):json({error:"Kode tidak valid"},400)}if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitGroupParticipant(request,env,c,Number(m[2]),env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/session\/([A-Z2-9]{6})$/i);if(m&&method==="GET"){const c=safeCode(m[1]);return c?getSession(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/session\/([A-Z2-9]{6})\/delete$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?deleteSession(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/guess\/([A-Z2-9]{6})$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitGuess(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}m=path.match(/^\/api\/report\/([A-Z2-9]{6})$/i);if(m&&method==="POST"){const c=safeCode(m[1]);return c?submitReport(request,env,c,env.DB):json({error:"Kode tidak valid"},400)}if(path==="/api/event"&&method==="POST")return submitEvent(request,env,env.DB);if(path.startsWith("/api/"))return json({error:"Endpoint tidak ditemukan"},404);return null}
 function withSecurityHeaders(response){const headers=new Headers(response.headers);for(const[k,v]of Object.entries(securityHeaders()))headers.set(k,v);return new Response(response.body,{status:response.status,statusText:response.statusText,headers})}
 export default{async fetch(request,env){try{const url=new URL(request.url);if(url.pathname.startsWith("/api/")){const response=await api(request,env);if(response)return response}const assetResponse=await env.ASSETS.fetch(request);return withSecurityHeaders(assetResponse)}catch(e){
   if(new URL(request.url).pathname==="/api/reward-ai"){
-  console.error("Reward AI error",e);
-  return json({
-    error:"AI Transform belum berhasil. Coba foto atau tema lain."
-  },500);
-}
+    console.error("Reward AI error",e);
+    return json({error:"AI Transform belum berhasil. Coba foto atau tema lain."},500);
+  }
   console.error("Klikfun worker error",e);const msg=String(e?.message||"");if(msg==="Payload terlalu besar"||msg==="JSON tidak valid"||msg==="Content-Type harus application/json")return json({error:msg},400);return json({error:"Terjadi gangguan server. Coba lagi."},500)}}};
+  
