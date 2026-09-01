@@ -66,6 +66,8 @@ for(const route of ["register","login","me","logout","recover","state"]){
 for(const marker of ["x-klikfun-admin-key","x-klikfun-participant-token","await db.batch(statements)"]){
   assert(read("_worker.js").includes(marker),`Pengamanan grup hilang: ${marker}`);
 }
+assert(!core.includes("localStorage.setItem('kf_group_admin_")&&!core.includes("localStorage.setItem('kf_group_links_"),"Rahasia grup tidak boleh disimpan persisten");
+assert(core.includes("'X-Klikfun-Participant-Token':kfGroupParticipantToken")&&!core.includes("token:kfGroupParticipantToken"),"Token submit grup harus dikirim melalui header");
 const worker=read("_worker.js");
 for(const marker of ["REWARD_AI_DAILY_LIMIT","dailyAIBudget(env,db)","reward_ai_daily:","Retry-After","contentLength>5*1024*1024","requestedSubject"]){
   assert(worker.includes(marker),`Pengamanan AI hilang: ${marker}`);
