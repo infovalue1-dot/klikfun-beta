@@ -2,6 +2,7 @@
 (()=>{
  const API={register:"/api/member/register",login:"/api/member/login",me:"/api/member/me",logout:"/api/member/logout",recover:"/api/member/recover",state:"/api/member/state"};
  let member=null;
+ let memberBusy=false;
  const $=id=>document.getElementById(id);
  const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  async function req(url,opt={}){
@@ -25,10 +26,10 @@
   e.innerHTML=`<h2>Member Klikfun</h2>
   <p class="small">${rec?"Pulihkan akses akun.":reg?"Buat akun untuk menyimpan progres Klikfun.":"Masuk ke akun Klikfun."}</p>
   <div id="memberStatus" class="notice" style="display:none"></div>
-  ${reg?'<label class="small">Nama tampilan<input id="memberDisplayName" maxlength="40" autocomplete="name"></label>':""}
-  <label class="small">Username<input id="memberUsername" maxlength="24" autocapitalize="none" autocomplete="username"></label>
-  ${rec?'<label class="small">Kode pemulihan<input id="memberRecoveryCode" maxlength="100" autocomplete="off"></label>':""}
-  <label class="small">${rec?"Kata sandi baru":"Kata sandi"}<input id="memberPassword" type="password" maxlength="128" autocomplete="${reg?"new-password":"current-password"}"></label>
+  ${reg?'<label class="small">Nama tampilan<input id="memberDisplayName" maxlength="40" autocomplete="name" required></label>':""}
+  <label class="small">Username<input id="memberUsername" minlength="3" maxlength="24" pattern="[a-z0-9._-]+" autocapitalize="none" autocomplete="username" required></label>
+  ${rec?'<label class="small">Kode pemulihan<input id="memberRecoveryCode" minlength="16" maxlength="100" autocomplete="off" required></label>':""}
+  <label class="small">${rec?"Kata sandi baru":"Kata sandi"}<input id="memberPassword" type="password" minlength="10" maxlength="128" autocomplete="${reg?"new-password":"current-password"}" required></label>
   <button class="btn primary" id="memberPrimary">${rec?"Pulihkan akun":reg?"Daftar":"Masuk"}</button>
   ${!reg&&!rec?'<button class="btn soft" id="memberToRegister">Buat akun baru</button>':""}
   ${reg?'<button class="btn ghost" id="memberToLogin">Sudah punya akun · Masuk</button>':""}
@@ -55,23 +56,29 @@
   $("memberLogout").onclick=logout
  }
  async function register(){
+  if(memberBusy)return;memberBusy=true;
   status("Membuat akun…");
+  $("memberPrimary").disabled=true;
   try{
    const d=await req(API.register,{method:"POST",body:JSON.stringify({username:$("memberUsername").value.trim(),display_name:$("memberDisplayName").value.trim(),password:$("memberPassword").value})});
    member=d.member;await save();home("Akun berhasil dibuat. Simpan kode pemulihan ini di tempat aman: "+d.recovery_code)
-  }catch(e){status(e.message,true)}
+  }catch(e){status(e.message,true)}finally{memberBusy=false;$("memberPrimary")&&($("memberPrimary").disabled=false)}
  }
  async function login(){
+  if(memberBusy)return;memberBusy=true;
   status("Masuk…");
+  $("memberPrimary").disabled=true;
   try{const d=await req(API.login,{method:"POST",body:JSON.stringify({username:$("memberUsername").value.trim(),password:$("memberPassword").value})});member=d.member;await load();home()}
-  catch(e){status(e.message,true)}
+  catch(e){status(e.message,true)}finally{memberBusy=false;$("memberPrimary")&&($("memberPrimary").disabled=false)}
  }
  async function recover(){
+  if(memberBusy)return;memberBusy=true;
   status("Memulihkan akun…");
+  $("memberPrimary").disabled=true;
   try{
    const d=await req(API.recover,{method:"POST",body:JSON.stringify({username:$("memberUsername").value.trim(),recovery_code:$("memberRecoveryCode").value.trim(),new_password:$("memberPassword").value})});
    const m=await req(API.me);member=m.member;await load();home("Akses dipulihkan. Kode pemulihan baru: "+d.recovery_code)
-  }catch(e){status(e.message,true)}
+  }catch(e){status(e.message,true)}finally{memberBusy=false;$("memberPrimary")&&($("memberPrimary").disabled=false)}
  }
  async function logout(){try{await req(API.logout,{method:"POST",body:"{}"})}catch(_){}member=null;render("login")}
  async function gate(){
