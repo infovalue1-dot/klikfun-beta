@@ -1,3 +1,4 @@
+/* LEGACY SNAPSHOT — tidak dimuat oleh index.html. Source aktif: klikfun-core-v15.js. */
 const $=id=>document.getElementById(id);
 const ALL_SECTIONS=['welcome','memberGate','home','quiz','handoff','result','groupSetup','groupRound','janji','janjiDone','game','gameMode','gameResult','gameStore','rewardCamera','profile'];
 
