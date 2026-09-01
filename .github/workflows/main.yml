@@ -1,0 +1,29 @@
+name: Gemini Klikfun Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gemini-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run Gemini CLI
+        id: gemini
+        uses: google-github-actions/run-gemini-cli@v0
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          prompt: |
+            Read this repository only.
+            Do not modify, delete, commit, or push any files.
+            Briefly inspect the current Klikfun repository and report:
+            1. Main files you can see.
+            2. Which frontend/game files appear important.
+            3. Confirm that you made no code changes.
