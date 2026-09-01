@@ -1,54 +1,8 @@
-/* Klikfun owner access + Reward Camera UX v2 */
+/* Klikfun Reward Camera UX v2 (public runtime only) */
 (()=>{
-  const OWNER_KEY_HASH="b8c578b24888a582381613cc741b0402ce4febe4c8d66ad1c12be365d8f5febc";
-  const OWNER_FLAG="kf_owner_reward_v1";
-  const TAP_COUNT=5;
-  const TAP_WINDOW_MS=3500;
-  let taps=[];
   let cameraFacing="user";
 
   const $id=id=>document.getElementById(id);
-
-  async function sha256(v){
-    const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(String(v||"")));
-    return [...new Uint8Array(d)].map(x=>x.toString(16).padStart(2,"0")).join("");
-  }
-
-  function isOwner(){return localStorage.getItem(OWNER_FLAG)==="1"}
-  function disableOwner(){localStorage.removeItem(OWNER_FLAG);taps=[]}
-
-  function grantOwnerReward(){
-    localStorage.setItem("kf_reward_entitlement_v2",JSON.stringify({
-      source:"owner",grantedAt:Date.now(),expiresAt:Date.now()+3600000,used:false,downloaded:false
-    }));
-  }
-
-  function openRewardCamera(){
-    if(!isOwner())return;
-    grantOwnerReward();
-    window.unlockReward("owner");
-    setTimeout(()=>{normalizeSports();resetCameraButtons();rebuildRewardUi();},30);
-  }
-
-  async function requestOwnerAccess(){
-    if(isOwner())return openRewardCamera();
-    const key=prompt("Masukkan kunci akses pemilik.");
-    if(!key)return;
-    if(await sha256(key)!==OWNER_KEY_HASH){alert("Kunci akses tidak cocok.");return}
-    localStorage.setItem(OWNER_FLAG,"1");
-    openRewardCamera();
-  }
-
-  function installHiddenTrigger(){
-    const brand=document.querySelector(".brand");
-    if(!brand||brand.dataset.ownerTrigger==="1")return;
-    brand.dataset.ownerTrigger="1";
-    brand.addEventListener("click",()=>{
-      const now=Date.now();
-      taps=taps.filter(t=>now-t<=TAP_WINDOW_MS);taps.push(now);
-      if(taps.length>=TAP_COUNT){taps=[];requestOwnerAccess()}
-    });
-  }
 
   function updateSwitchLabel(){
     const b=$id("switchCameraBtn");
@@ -288,10 +242,9 @@
   };
 
   function init(){
-    injectStyles();installHiddenTrigger();installSwitchCamera();rebuildRewardUi();watchThemes();resetCameraButtons();
+    injectStyles();installSwitchCamera();rebuildRewardUi();watchThemes();resetCameraButtons();
   }
 
-  window.KF_OWNER={active:isOwner,openRewardCamera,disable:disableOwner};
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",init,{once:true});else init();
 })();
   

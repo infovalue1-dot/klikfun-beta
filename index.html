@@ -235,7 +235,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="grid2">
       <button class="action" onclick="showPortalHub()"><b>Portal Mission</b><span>Farming EXP, Skill Book, Artifact, senjata, material dan loot. Portal dapat berisi monster, boss, eksplorasi atau hanya loot.</span></button>
       <button class="action" onclick="showGameMode('multi')"><b>Arena 5v5</b><span>Battle kompetitif 5v5 tanpa farming level/EXP di dalam pertandingan.</span></button>
-      <button class="action" onclick="showMarketplace()"><b>Marketplace KP</b><span>Jual reward ke pemain lain atau jual cepat ke System dengan harga KP lebih rendah.</span></button>
+      <button class="action" onclick="showMarketplace()"><b>Marketplace KP</b><span>Jual reward ke pemain lain atau jual cepat melalui Klikfun dengan harga KP lebih rendah.</span></button>
     </div>
     <h3>Progression</h3>
     <div class="tabs"><span class="tab">Portal</span><span class="tab">Boss Portal</span><span class="tab">Portal Break</span><span class="tab">Skill Book</span><span class="tab">Artifact</span><span class="tab">Weapon</span><span class="tab">KP Marketplace</span></div>
@@ -319,7 +319,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
     <div class="metric"><div><b>Marketplace KP</b><div class="small">Tidak menggunakan uang asli untuk jual-beli reward Portal.</div></div><span id="marketKP" class="badge">0 KP</span></div>
     <h3>Inventory</h3><div id="marketInventory" class="inventory-grid"></div>
     <h3>Listing pemain</h3><div id="marketListings" class="inventory-grid"></div>
-    <div class="notice">Jual ke System = cepat tetapi harga KP lebih rendah. Listing ke pemain = pemilik menentukan harga KP. Vendor promo/voucher tidak otomatis dapat diperdagangkan.</div>
+    <div class="notice">Jual cepat melalui Klikfun memberikan harga KP lebih rendah. Listing ke pemain memberi pemilik kebebasan menentukan harga KP. Promo atau voucher tertentu tidak dapat diperdagangkan.</div>
     <button class="btn ghost" onclick="showOnly('game')">Balik</button>
   </section>
 
@@ -461,7 +461,7 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
 <script src="./klikfun-core-v15.js"></script>
 <script src="klikfun-member.js"></script>
 <script src="klikfun-game-v12.js"></script>
-<script src="klikfun-owner.js"></script>
+<script src="klikfun-reward.js"></script>
 </body>
           </html>
     
