@@ -564,12 +564,14 @@ function currentStyleFinal(){return REWARD_STYLE_FINAL.find(x=>x.id===$('rewardS
 function applyStylePreviewFinal(){const x=currentStyleFinal();$('camCanvas').style.filter=x.filter;$('styleHint').textContent=x.hint+' · efek objek/scene aktif saat FIX'}
 async function aiTransformFinal(){if(!rewardShot||rewardFixed)return;const c=$('camCanvas'),theme=$('aiTheme').value,cat=$('aiCategory').value,tmp=document.createElement('canvas');const ratio=c.width/c.height;
 
+const maxInput=511;
+
 if(ratio>=1){
-  tmp.width=512;
-  tmp.height=Math.max(1,Math.round(512/ratio));
+  tmp.width=maxInput;
+  tmp.height=Math.max(256,Math.round(maxInput/ratio));
 }else{
-  tmp.height=512;
-  tmp.width=Math.max(1,Math.round(512*ratio));
+  tmp.height=maxInput;
+  tmp.width=Math.max(256,Math.round(maxInput*ratio));
 }
 
 tmp.getContext('2d').drawImage(
