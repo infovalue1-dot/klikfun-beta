@@ -288,7 +288,7 @@ function openJanjiFromLink(id){const arr=JSON.parse(localStorage.getItem(KF_STOR
 
 /* MEMBER architecture: capability-complete frontend, backend-gated */
 function memberCapabilities(){return{passkey:!!window.PublicKeyCredential,recoveryCode:true,memberId:true,inbox:true,notifications:'Notification'in window,backendRequired:true}}
-function showMemberGateFinal(){showOnly('memberGate');$('memberGate').innerHTML=`<h2>Member Klikfun</h2><p class="small">Buat akun baru atau masuk untuk menyimpan progres Klikfun.</p><button class="btn primary" disabled aria-disabled="true">Daftar · Segera tersedia</button><button class="btn ghost" disabled aria-disabled="true">Masuk · Segera tersedia</button><button class="btn ghost" onclick="showOnly('welcome')">Balik</button>`}
+function showMemberGateFinal(){showOnly('memberGate');$('memberGate').innerHTML=`<h2>Member Klikfun</h2><p class="small">Formulir akun sedang dimuat.</p><div class="notice">Jika formulir belum muncul, Anda tetap dapat melanjutkan sebagai pengunjung.</div><button class="btn primary" onclick="enterGuest()">Lanjut sebagai Pengunjung</button><button class="btn ghost" onclick="showOnly('welcome')">Balik</button>`}
 showMemberGate=showMemberGateFinal;
 
 /* GAME — Portal-first Action-RPG + Arena 5v5. Database-driven, no generative map/monster runtime. */
@@ -480,7 +480,7 @@ let activePortalBreak=null;function showPortalBreak(){const b=PORTAL_BREAK_REGIS
 function showMarketplace(){showOnly('marketplace');renderMarketplace()}
 function renderMarketplace(){setGameKP(getGameKP());const inv=getInventory();$('marketInventory').innerHTML=inv.length?inv.map(x=>`<div class="inventory-item"><b>${x.name}</b><div class="small">${x.kind||'Item'} · ${x.rarity||''} · System ${x.systemKP||0} KP</div><div class="row">${x.kind==='Skill Book'?`<button type="button" class="btn primary" onclick="useSkillBook('${x.uid}')">Pelajari</button>`:''}<button type="button" class="btn soft" ${x.vendorPromo?'disabled':''} onclick="sellItemSystem('${x.uid}')">Jual System</button><button type="button" class="btn ghost" ${x.tradable===false?'disabled':''} onclick="listItemPlayer('${x.uid}')">Listing</button></div></div>`).join(''):'<div class="small">Inventory kosong. Clear Portal untuk memperoleh loot.</div>';let listings=[];try{listings=JSON.parse(localStorage.getItem(PORTAL_STORAGE.listings)||'[]')}catch(_){}$('marketListings').innerHTML=listings.length?listings.map(x=>`<div class="inventory-item"><b>${x.name}</b><div class="small">Harga ${x.price} KP · seller: Kamu (demo lokal)</div><button type="button" class="btn ghost" onclick="cancelListing('${x.uid}')">Batalkan listing</button></div>`).join(''):'<div class="small">Belum ada listing.</div>'}
 function sellItemSystem(uid){let inv=getInventory(),i=inv.findIndex(x=>x.uid===uid);if(i<0)return;const item=inv[i];if(item.vendorPromo)return alert('Vendor promo tidak dijual ke System.');setGameKP(getGameKP()+(item.systemKP||0));inv.splice(i,1);saveInventory(inv);renderMarketplace()}
-function listItemPlayer(uid){let inv=getInventory(),i=inv.findIndex(x=>x.uid===uid);if(i<0)return;const item=inv[i];if(item.tradable===false)return;const minPlayerPrice=Math.max(2,(item.systemKP||0)+1),raw=prompt('Harga listing dalam KP (minimal '+minPlayerPrice+' KP)',String(Math.max(minPlayerPrice+9,20))),price=Math.floor(Number(raw));if(!Number.isFinite(price)||price<minPlayerPrice){alert('Harga listing pemain harus lebih tinggi dari harga beli System ('+(item.systemKP||0)+' KP).');return;}let listings=[];try{listings=JSON.parse(localStorage.getItem(PORTAL_STORAGE.listings)||'[]')}catch(_){}listings.unshift({...item,price,listedAt:Date.now()});localStorage.setItem(PORTAL_STORAGE.listings,JSON.stringify(listings.slice(0,100)));inv.splice(i,1);saveInventory(inv);renderMarketplace()}
+function listItemPlayer(uid){let inv=getInventory(),i=inv.findIndex(x=>x.uid===uid);if(i<0)return;const item=inv[i];if(item.tradable===false)return;const minPlayerPrice=Math.max(2,(item.systemKP||0)+1),raw=prompt('Harga listing dalam KP (minimal '+minPlayerPrice+' KP)',String(Math.max(minPlayerPrice+9,20))),price=Math.floor(Number(raw));if(!Number.isFinite(price)||price<minPlayerPrice){alert('Harga listing pemain harus lebih tinggi dari harga jual cepat Klikfun ('+(item.systemKP||0)+' KP).');return;}let listings=[];try{listings=JSON.parse(localStorage.getItem(PORTAL_STORAGE.listings)||'[]')}catch(_){}listings.unshift({...item,price,listedAt:Date.now()});localStorage.setItem(PORTAL_STORAGE.listings,JSON.stringify(listings.slice(0,100)));inv.splice(i,1);saveInventory(inv);renderMarketplace()}
 function cancelListing(uid){let listings=[];try{listings=JSON.parse(localStorage.getItem(PORTAL_STORAGE.listings)||'[]')}catch(_){}const i=listings.findIndex(x=>x.uid===uid);if(i<0)return;const item=listings.splice(i,1)[0];delete item.price;delete item.listedAt;const inv=getInventory();inv.unshift(item);saveInventory(inv);localStorage.setItem(PORTAL_STORAGE.listings,JSON.stringify(listings));renderMarketplace()}
 
 function gameRefreshHeroSelect(preferId){const el=$('heroSelect');if(!el)return;const hs=unlockedHeroes(),cur=preferId||el.value;el.innerHTML=hs.map(h=>`<option value="${h.id}">${h.name} · ${h.subrole}</option>`).join('');if(hs.some(h=>h.id===cur))el.value=cur;else if(hs[0])el.value=hs[0].id}
@@ -579,13 +579,8 @@ tmp.getContext('2d').drawImage(
   0,0,c.width,c.height,
   0,0,tmp.width,tmp.height
 );let blob;try{blob=await new Promise((res,rej)=>tmp.toBlob(b=>b?res(b):rej(Error('Gagal memproses foto')),'image/jpeg',.86));const form=new FormData();form.append('image',blob,'klikfun.jpg');form.append('theme',cat);form.append('subtheme',buildIdentitySafePrompt(theme));form.append('mode',rewardUnlockSource==='group-shared'?'group':'solo');form.append('subject_type',rewardSubject.type);const r=await fetch(KF_API.rewardAI,{method:'POST',body:form});if(!r.ok){
-  let d={};
-  try{d=await r.json()}catch(_){}
-  alert(
-    "AI Transform gagal.\n"+
-    "Kode: "+(d.debug_code||"UNKNOWN")+
-    "\nTipe: "+(d.debug_type||"UNKNOWN")
-  );
+  let d={};try{d=await r.json()}catch(_){}
+  alert(d.error||"AI Transform belum berhasil. Coba lagi nanti.");
   return;
 }
                                                                                                                                                                                                                                                                                                                                                                            
@@ -730,7 +725,7 @@ function portalActionFrame(now){
  if(st.alive){st.x=Math.max(.035,Math.min(.965,st.x+portalJoy.x*speed*dt));st.y=Math.max(.07,Math.min(.93,st.y+portalJoy.y*speed*dt))}
  else if(st.respawnAt&&now>=st.respawnAt)portalActionRespawn(now);
  Object.keys(st.cool).forEach(k=>st.cool[k]=Math.max(0,st.cool[k]-dt));
- /* Bot Hero: follow player, acquire nearest enemy, attack with human-like cadence. */
+ /* Automated allies follow the player, acquire the nearest enemy, and attack adaptively. */
  st.bots.forEach((b,i)=>{if(!b.alive)return;const e=portalActionNearestEnemy(b.x,b.y);if(e){const dx=e.x-b.x,dy=e.y-b.y,d=Math.hypot(dx,dy)||1;if(d>.17){b.x+=dx/d*.055*dt;b.y+=dy/d*.055*dt}else if(now-b.lastAttack>850+i*110){b.lastAttack=now;portalActionDamageEnemy(e,8+(st.portal.level*.7)+(b.role==='DPS'?4:b.role==='Tank'?1:2))}}else{const tx=st.x-.04-(i%2)*.035,ty=st.y+(i%3-1)*.05;b.x+=(tx-b.x)*.8*dt;b.y+=(ty-b.y)*.8*dt}});
  /* Monster AI: target closest living party member; boss gains pressure by phase. */
  st.enemies.forEach((e,ei)=>{if(!e.alive)return;let targets=[];if(st.alive)targets.push({kind:'player',x:st.x,y:st.y,obj:st});st.bots.filter(b=>b.alive).forEach(b=>targets.push({kind:'bot',x:b.x,y:b.y,obj:b}));if(!targets.length)return;

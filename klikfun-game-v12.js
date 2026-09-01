@@ -329,7 +329,7 @@ window.portalActionDamagePlayer=function(dmg,t){
  let damage=dmg*incomingDamageMultiplier(st);
  if(st.shield>0){const absorb=Math.min(st.shield,damage);st.shield-=absorb;damage-=absorb}
  st.hp=Math.max(0,st.hp-damage);
- if(st.hp<=0){st.alive=false;st.respawnAt=t+5000;portalActionSetStatus('Hero tumbang · respawn 5 detik');portalActionLog('Hero tumbang. Bot Hero tetap bertarung.')}
+ if(st.hp<=0){st.alive=false;st.respawnAt=t+5000;portalActionSetStatus('Hero tumbang · respawn 5 detik');portalActionLog('Hero tumbang. Pertarungan tetap berlanjut.')}
 };
 
 function arenaTargetProxy(st){return ensureStatus({x:st.ex,y:st.ey,hp:st.ehp,maxHp:100,shield:st.enemyShield||0,status:st.enemyStatus||{}})}
