@@ -1,4 +1,4 @@
-name: Gemini Klikfun Read Test
+name: Gemini Klikfun File Input Test
 
 on:
   workflow_dispatch:
@@ -10,37 +10,33 @@ jobs:
   gemini-test:
     runs-on: ubuntu-latest
     timeout-minutes: 5
-    env:
-      GEMINI_CLI_TRUST_WORKSPACE: "true"
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Gemini inspect Klikfun
-        uses: google-github-actions/run-gemini-cli@v0
-        with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          gemini_model: gemini-3-flash-preview
-          prompt: |
-            Inspect this Klikfun repository in READ-ONLY mode.
+      - name: Prepare Klikfun source
+        run: |
+          head -c 12000 index.html > /tmp/klikfun-source.txt
 
-            Do not modify, create, delete, rename, commit, or push any file.
-            Do not run commands that alter repository contents.
+      - name: Gemini analyze supplied source
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: gemini-3-flash-preview
+        run: |
+          npm install --silent --no-audit --global @google/gemini-cli
 
-            Read these files if they exist:
-            - index.html
-            - klikfun-extra.js
-            - klikfun-db.js
-            - _worker.js
-            - _routes.json
+          {
+            echo "Analyze the following excerpt from Klikfun index.html."
+            echo "Do not access or inspect any repository files yourself."
+            echo "Do not use tools."
+            echo "Briefly explain what this code appears to do."
+            echo "End with exactly: GEMINI_KLIKFUN_FILE_INPUT_OK"
+            echo ""
+            echo "----- KLIKFUN SOURCE -----"
+            cat /tmp/klikfun-source.txt
+          } > /tmp/gemini-prompt.txt
 
-            Report briefly:
-            1. Which of those files exist.
-            2. The apparent role of each file.
-            3. Which files appear most important for the Klikfun frontend/game.
-            4. Any obvious connection between frontend, database, and worker code.
-            5. Confirm explicitly that you made NO file changes.
-
-            End your response with exactly:
-            GEMINI_KLIKFUN_READ_OK
+          gemini \
+            --prompt "$(cat /tmp/gemini-prompt.txt)" \
+            --output-format text
