@@ -562,7 +562,21 @@ function renderStyleOptionsFinal(subjectAware=false){const preferred=new Set(SUB
 function renderAiThemesFinal(){const cat=$('aiCategory').value==='geo'?'geographic':$('aiCategory').value,list=AI_THEME_FINAL[cat]||[];$('aiTheme').innerHTML=list.map(x=>`<option>${x}</option>`).join('')}
 function currentStyleFinal(){return REWARD_STYLE_FINAL.find(x=>x.id===$('rewardStyle').value)||REWARD_STYLE_FINAL[0]}
 function applyStylePreviewFinal(){const x=currentStyleFinal();$('camCanvas').style.filter=x.filter;$('styleHint').textContent=x.hint+' · efek objek/scene aktif saat FIX'}
-async function aiTransformFinal(){if(!rewardShot||rewardFixed)return;const c=$('camCanvas'),theme=$('aiTheme').value,cat=$('aiCategory').value,tmp=document.createElement('canvas');tmp.width=480;tmp.height=480;const side=Math.min(c.width,c.height),sx=(c.width-side)/2,sy=(c.height-side)/2;tmp.getContext('2d').drawImage(c,sx,sy,side,side,0,0,480,480);let blob;try{blob=await new Promise((res,rej)=>tmp.toBlob(b=>b?res(b):rej(Error('Gagal memproses foto')),'image/jpeg',.86));const form=new FormData();form.append('image',blob,'klikfun.jpg');form.append('theme',cat);form.append('subtheme',buildIdentitySafePrompt(theme));form.append('mode',rewardUnlockSource==='group-shared'?'group':'solo');form.append('subject_type',rewardSubject.type);const r=await fetch(KF_API.rewardAI,{method:'POST',body:form});if(!r.ok){
+async function aiTransformFinal(){if(!rewardShot||rewardFixed)return;const c=$('camCanvas'),theme=$('aiTheme').value,cat=$('aiCategory').value,tmp=document.createElement('canvas');const ratio=c.width/c.height;
+
+if(ratio>=1){
+  tmp.width=512;
+  tmp.height=Math.max(1,Math.round(512/ratio));
+}else{
+  tmp.height=512;
+  tmp.width=Math.max(1,Math.round(512*ratio));
+}
+
+tmp.getContext('2d').drawImage(
+  c,
+  0,0,c.width,c.height,
+  0,0,tmp.width,tmp.height
+);let blob;try{blob=await new Promise((res,rej)=>tmp.toBlob(b=>b?res(b):rej(Error('Gagal memproses foto')),'image/jpeg',.86));const form=new FormData();form.append('image',blob,'klikfun.jpg');form.append('theme',cat);form.append('subtheme',buildIdentitySafePrompt(theme));form.append('mode',rewardUnlockSource==='group-shared'?'group':'solo');form.append('subject_type',rewardSubject.type);const r=await fetch(KF_API.rewardAI,{method:'POST',body:form});if(!r.ok){
   let d={};
   try{d=await r.json()}catch(_){}
   alert(
