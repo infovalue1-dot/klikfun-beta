@@ -207,7 +207,7 @@
   
   function rebuildRewardUi(){
     const edit=$id("rewardEdit"),fixed=$id("rewardFixed");if(!edit||!fixed)return;
-    edit.innerHTML=`<div class="reward-choice-grid">
+    edit.innerHTML=`<div id="subjectHint" class="small"></div><div class="reward-choice-grid">
       <div class="reward-choice"><h3>Edit Foto</h3><select id="rewardStyle" onchange="applyStylePreview()"></select><div id="styleHint" class="small" style="display:none"></div><button id="applyEditBtn" class="btn primary" type="button">Terapkan</button></div>
       <div class="reward-choice"><h3>AI Transform</h3><select id="aiCategory" onchange="renderAiThemes()"><option value="beauty">Beauty</option><option value="fantasy">Fantasy</option><option value="geo">Historical / Geographic</option><option value="ninja">Ninja</option><option value="cartoon">Cartoon / Anime</option><option value="sport">Sport</option><option value="fun">Fun</option><option value="visual">Visual</option></select><select id="aiTheme"></select><button id="applyAiBtn" class="btn soft" type="button">Buat dengan AI</button></div>
     </div><button id="rewardRetakeBtn" class="btn ghost reward-retake" type="button" onclick="retakePhoto()">Foto ulang</button>`;
@@ -217,7 +217,7 @@
     normalizeSports();bindButtons();
   }
 
-  function setLocked(v){["rewardStyle","aiCategory","aiTheme","applyEditBtn","applyAiBtn","rewardRetakeBtn"].forEach(id=>{const e=$id(id);if(e)e.disabled=!!v})}
+  function setLocked(v){["rewardFile","rewardStyle","aiCategory","aiTheme","applyEditBtn","applyAiBtn","rewardRetakeBtn"].forEach(id=>{const e=$id(id);if(e)e.disabled=!!v})}
 
   function showFinal(){
     $id("rewardEdit")?.classList.add("hidden");$id("rewardFixed")?.classList.remove("hidden");hideCameraControls();

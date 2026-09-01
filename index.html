@@ -393,9 +393,10 @@ select,input{width:100%;padding:13px;border-radius:14px;border:1px solid var(--l
       <button id="camBtn" class="btn ghost" onclick="toggleCamera()">Nyalakan kamera</button>
       <button id="snapBtn" class="btn primary" onclick="takePhoto()">Ambil foto</button>
     </div>
+    <label class="small">Atau pilih foto dari perangkat<input id="rewardFile" type="file" accept="image/*" onchange="loadRewardFile(event)"></label>
     <div id="rewardEdit" class="hidden">
+      <div id="subjectHint" class="small"></div>
       <div class="notice"><b>Foto adaptif:</b> STYLE menyesuaikan isi foto secara otomatis.</div>
-      <label class="small">Atau pilih foto dari perangkat<input id="rewardFile" type="file" accept="image/*" onchange="loadRewardFile(event)"></label>
 
       <h3>STYLE lokal</h3>
       <select id="rewardStyle" onchange="applyStylePreview()"></select>
