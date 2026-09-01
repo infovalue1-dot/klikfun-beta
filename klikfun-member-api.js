@@ -38,6 +38,7 @@ function sanitizeState(state){
 async function body(request,max=96*1024){
  const t=String(request.headers.get("content-type")||"").toLowerCase();
  if(!t.includes("application/json"))throw Error("Content-Type harus application/json");
+ const len=Number(request.headers.get("content-length")||0);if(len&&len>max)throw Error("Payload terlalu besar");
  const s=await request.text();if(new TextEncoder().encode(s).byteLength>max)throw Error("Payload terlalu besar");
  try{return s?JSON.parse(s):{}}catch{throw Error("JSON tidak valid")}
 }

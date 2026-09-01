@@ -60,6 +60,7 @@ for(const forbidden of ["Segera tersedia","Database belum terhubung","D1 binding
 }
 
 const memberApi=read("klikfun-member-api.js"),memberUi=read("klikfun-member.js");
+assert(memberApi.indexOf('request.headers.get("content-length")')<memberApi.indexOf("await request.text()"),"Batas request member harus diperiksa sebelum body dibaca");
 for(const route of ["register","login","me","logout","recover","state"]){
   assert(memberApi.includes(`/api/member/${route}`)&&memberUi.includes(`/api/member/${route}`),`Kontrak member tidak lengkap: ${route}`);
 }
