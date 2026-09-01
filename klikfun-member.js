@@ -41,16 +41,22 @@
   $("memberToRecover")&&($("memberToRecover").onclick=()=>render("recover"));
   $("memberBack").onclick=()=>window.showOnly?showOnly("welcome"):history.back()
  }
- function home(extra=""){
+ async function copyRecoveryCode(code){
+  const copied=typeof window.copyTextSafe==="function"?await window.copyTextSafe(code):(navigator.clipboard&&window.isSecureContext?await navigator.clipboard.writeText(code).then(()=>true).catch(()=>false):false);
+  alert(copied?"Kode pemulihan disalin.":"Kode belum dapat disalin. Tekan lama pada kode untuk menyalinnya.")
+ }
+ function home(extra="",recoveryCode=null){
   const e=$("memberGate");if(!e||!member)return;
   e.innerHTML=`<h2>Member Klikfun</h2>
   <div class="metric"><span>Nama</span><b>${esc(member.display_name)}</b></div>
   <div class="metric"><span>Member ID</span><b>${esc(member.member_id)}</b></div>
   <div class="metric"><span>Username</span><b>@${esc(member.username)}</b></div>
   ${extra?`<div class="notice ok">${esc(extra)}</div>`:""}
-  <button class="btn primary" id="memberContinue">Lanjut ke Klikfun</button>
+  ${recoveryCode?`<div class="notice"><b>Simpan kode pemulihan ini sekarang.</b><div id="memberRecoveryOnce" class="share" style="word-break:break-all;user-select:all">${esc(recoveryCode)}</div><div class="small">Kode hanya ditampilkan pada layar ini dan diperlukan jika Anda lupa kata sandi.</div></div><button class="btn soft" id="memberCopyRecovery">Salin kode pemulihan</button>`:""}
+  <button class="btn primary" id="memberContinue">${recoveryCode?"Saya sudah menyimpan · Lanjut":"Lanjut ke Klikfun"}</button>
   <button class="btn soft" id="memberSave">Simpan progres</button>
   <button class="btn ghost" id="memberLogout">Keluar akun</button>`;
+  $("memberCopyRecovery")&&($("memberCopyRecovery").onclick=()=>copyRecoveryCode(recoveryCode));
   $("memberContinue").onclick=async()=>{try{await save()}catch(_){}window.goHome?goHome():showOnly("welcome")};
   $("memberSave").onclick=async()=>{try{await save();alert("Progres tersimpan.")}catch(e){alert(e.message)}};
   $("memberLogout").onclick=logout
@@ -61,7 +67,7 @@
   $("memberPrimary").disabled=true;
   try{
    const d=await req(API.register,{method:"POST",body:JSON.stringify({username:$("memberUsername").value.trim(),display_name:$("memberDisplayName").value.trim(),password:$("memberPassword").value})});
-   member=d.member;await save();home("Akun berhasil dibuat. Simpan kode pemulihan ini di tempat aman: "+d.recovery_code)
+   member=d.member;await save();home("Akun berhasil dibuat.",d.recovery_code)
   }catch(e){status(e.message,true)}finally{memberBusy=false;$("memberPrimary")&&($("memberPrimary").disabled=false)}
  }
  async function login(){
@@ -77,7 +83,7 @@
   $("memberPrimary").disabled=true;
   try{
    const d=await req(API.recover,{method:"POST",body:JSON.stringify({username:$("memberUsername").value.trim(),recovery_code:$("memberRecoveryCode").value.trim(),new_password:$("memberPassword").value})});
-   const m=await req(API.me);member=m.member;await load();home("Akses dipulihkan. Kode pemulihan baru: "+d.recovery_code)
+   const m=await req(API.me);member=m.member;await load();home("Akses dipulihkan.",d.recovery_code)
   }catch(e){status(e.message,true)}finally{memberBusy=false;$("memberPrimary")&&($("memberPrimary").disabled=false)}
  }
  async function logout(){try{await req(API.logout,{method:"POST",body:"{}"})}catch(_){}member=null;render("login")}
