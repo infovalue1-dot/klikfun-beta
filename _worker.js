@@ -107,12 +107,12 @@ const finalPrompt=
   identityRule+" "+
   categoryPrompt[theme]+" "+
   (safeVariation?`Selected theme: ${safeVariation}. `:"")+
-  "The result must still look like the same person from the input, not a newly invented face. Transform the character and scene substantially without changing identity. Keep clothing modest and age-appropriate. Preserve hijab or other head coverings when present. No sexualized styling, text, logos, watermarks, extra people, duplicate faces or distorted hands.";
+  "Compose the complete subject inside a vertical 3:4 portrait with safe space around the head and body. The result must still look like the same person from the input, not a newly invented face. Transform the character and scene substantially without changing identity. Keep clothing modest and age-appropriate. Preserve hijab or other head coverings when present. No sexualized styling, text, logos, watermarks, extra people, duplicate faces or distorted hands.";
   const aiForm=new FormData();
   aiForm.append("input_image_0",image,image.name||"klikfun.jpg");
     aiForm.append("prompt",finalPrompt);
-  aiForm.append("width","512");
-  aiForm.append("height","512");
+  aiForm.append("width",mode==="group"?"768":"384");
+  aiForm.append("height",mode==="group"?"1024":"512");
 
   const serialized=new Response(aiForm);
   const result=await env.AI.run("@cf/black-forest-labs/flux-2-klein-4b",{
