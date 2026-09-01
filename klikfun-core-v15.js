@@ -1,5 +1,5 @@
 const $=id=>document.getElementById(id);
-const ALL_SECTIONS=['welcome','memberGate','home','quiz','handoff','result','groupSetup','groupRound','janji','janjiDone','game','gameMode','gameResult','gameStore','rewardCamera','profile'];
+const ALL_SECTIONS=['welcome','memberGate','home','quiz','handoff','result','groupSetup','groupRound','janji','janjiDone','game','portalHub','portalMission','portalBreak','portalRecruitment','heroCollection','heroDiscovery','marketplace','gameMode','gameResult','rewardCamera','profile'];
 
 const CONFIG={
   maxGroup:5,
@@ -35,9 +35,11 @@ let camStream=null,rewardShot=false,rewardFixed=false,rewardDataUrl=null,rewardD
 let kp=0;
 
 function showOnly(id){
-  ALL_SECTIONS.forEach(x=>$(x)&&$(x).classList.add('hidden'));
-  $(id).classList.remove('hidden');
-  if(id!=='welcome'&&id!=='memberGate')$('bottomnav').classList.remove('hidden'); else $('bottomnav').classList.add('hidden');
+  document.querySelectorAll('main > section').forEach(section=>section.classList.add('hidden'));
+  const target=$(id)||$('welcome');
+  target.classList.remove('hidden');
+  const activeId=target.id;
+  if(activeId!=='welcome'&&activeId!=='memberGate')$('bottomnav').classList.remove('hidden'); else $('bottomnav').classList.add('hidden');
   window.scrollTo({top:0,behavior:'smooth'});
 }
 function enterGuest(){sessionStorage.setItem('kf_guest','1');showOnly('home');loadPublicCount()}
@@ -113,7 +115,7 @@ async function shareJanji(){const text='JANJI Klikfun: '+janjiActivity+' · '+ja
 function showGame(){showOnly('game')}
 function showGameMode(mode){$('gameModeTitle').textContent=mode==='solo'?'Main Sendiri':mode==='multi'?'Main Bareng':'Event & Turnamen';showOnly('gameMode')}
 function simulateGame(){kp+=25;$('kpValue').textContent=kp;showOnly('gameResult')}
-function legacyShowGameStore(){showOnly('gameStore')}
+function legacyShowGameStore(){showMarketplace()}
 
 const STYLE_PRESETS=[
  {id:'natural',name:'Natural Beauty',hint:'Natural, bersih, flattering.',filter:'brightness(1.04) contrast(1.02) saturate(1.03)'},
@@ -529,7 +531,7 @@ function gameChatAppend(sender,message,channel='team'){const log=$('gameChatLog'
 function gameSendChat(){const input=$('gameChatInput'),raw=(input.value||'').trim();if(!raw)return;if(raw.length>80){alert('Pesan maksimal 80 karakter.');return}if(typeof kfSafeText==='function'&&!kfSafeText(raw)){alert('Pesan ditolak oleh moderasi Klikfun.');return}gameChatAppend('Kamu',raw,$('gameChatChannel').value);input.value=''}
 function gameQuickChat(message){gameChatAppend('Kamu',message,'team');gameSetStatus(message)}
 function gameFinishDemo(win){if(!gameState)return;cancelAnimationFrame(gameRAF);gameRAF=0;const gain=win?25:10;kfAddKP(gain,'Arena '+(win?'menang':'selesai'));$('gameResult').querySelector('.metric b').textContent='+'+gain;$('gameResult').querySelectorAll('.metric')[1].querySelector('b').textContent='+0';grantReward('game');showOnly('gameResult')}
-function showGameStore(){showOnly('gameStore')}
+function showGameStore(){showMarketplace()}
 function simulateGameFinal(){startGameDemo()}
 simulateGame=simulateGameFinal;
 const REWARD_STYLE_FINAL=[
