@@ -1,4 +1,4 @@
-name: Gemini Klikfun File Input Test
+name: Gemini Klikfun Controlled Change Test
 
 on:
   workflow_dispatch:
@@ -15,11 +15,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Prepare Klikfun source
+      - name: Prepare test source
         run: |
-          head -c 12000 index.html > /tmp/klikfun-source.txt
+          printf '%s\n' \
+            '<!doctype html>' \
+            '<html lang="id">' \
+            '<head><title>Klikfun Test</title></head>' \
+            '<body>' \
+            '<button id="play">Main</button>' \
+            '</body>' \
+            '</html>' \
+            > /tmp/klikfun-test.html
 
-      - name: Gemini analyze supplied source
+      - name: Gemini controlled code change
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: gemini-3-flash-preview
@@ -28,16 +36,26 @@ jobs:
           npm install --silent --no-audit --global @google/gemini-cli
 
           {
-            echo "Analyze the following excerpt from Klikfun index.html."
-            echo "Do not access or inspect any repository files yourself."
+            echo "Modify ONLY the HTML source supplied below."
+            echo "Do not access repository files."
             echo "Do not use tools."
-            echo "Briefly explain what this code appears to do."
-            echo "End with exactly: GEMINI_KLIKFUN_FILE_INPUT_OK"
+            echo "Return ONLY the complete modified HTML. No markdown fences."
+            echo "Make exactly one functional change:"
+            echo "change the visible button text from Main to Mulai Main."
+            echo "Do not change the button id or anything else."
             echo ""
-            echo "----- KLIKFUN SOURCE -----"
-            cat /tmp/klikfun-source.txt
+            echo "----- SOURCE -----"
+            cat /tmp/klikfun-test.html
           } > /tmp/gemini-prompt.txt
 
           gemini \
             --prompt "$(cat /tmp/gemini-prompt.txt)" \
-            --output-format text
+            --output-format text > /tmp/gemini-result.html
+
+          echo "----- GEMINI RESULT -----"
+          cat /tmp/gemini-result.html
+
+          grep -q '<button id="play">Mulai Main</button>' /tmp/gemini-result.html
+          grep -q '<title>Klikfun Test</title>' /tmp/gemini-result.html
+
+          echo "GEMINI_KLIKFUN_CONTROLLED_CHANGE_OK"
