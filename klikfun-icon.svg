@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Klikfun">
+  <rect width="512" height="512" rx="116" fill="#5b4df5"/>
+  <path fill="#fff" d="M123 105h74v120l94-120h92L270 241l122 166h-91L221 293l-24 28v86h-74V105Z"/>
+  <circle cx="389" cy="112" r="35" fill="#ffcf4d"/>
+</svg>

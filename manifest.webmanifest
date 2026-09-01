@@ -1,0 +1,20 @@
+{
+  "name": "Klikfun",
+  "short_name": "Klikfun",
+  "description": "Tebak teman, main bersama, dan jelajahi Klikfun.",
+  "lang": "id",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f7f7fb",
+  "theme_color": "#5b4df5",
+  "icons": [
+    {
+      "src": "/klikfun-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
