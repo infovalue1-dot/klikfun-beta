@@ -9,6 +9,8 @@ permissions:
 jobs:
   gemini-test:
     runs-on: ubuntu-latest
+    env:
+      GEMINI_CLI_TRUST_WORKSPACE: "true"
     timeout-minutes: 10
 
     steps:
