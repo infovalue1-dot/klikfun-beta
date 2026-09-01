@@ -23,6 +23,7 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GEMINI_MODEL: gemini-3-flash-preview
+          GEMINI_CLI_TRUST_WORKSPACE: "true"
         run: |
           npm install --silent --no-audit --global @google/gemini-cli
 
