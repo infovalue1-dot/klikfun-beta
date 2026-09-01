@@ -43,6 +43,7 @@ async function cleanup(db){const now=nowSec(),cutoff=now-RETENTION_SECONDS;await
 function maybeCleanup(db){const b=new Uint8Array(1);crypto.getRandomValues(b);return((b[0]&63)===0)?cleanup(db).catch(()=>{}):Promise.resolve()}
 async function actorKey(request,env){const ip=request.headers.get("CF-Connecting-IP")||"unknown",salt=env.RATE_SALT||"klikfun-rate-v1",ua=String(request.headers.get("user-agent")||"").slice(0,180);return(await sha256Hex(`${salt}|${ip}|${ua}`)).slice(0,32)}
 async function rateLimit(request,env,db,name,limit,windowSec){const actor=await actorKey(request,env),now=nowSec(),bucket=`${name}:${Math.floor(now/windowSec)}`;const row=await db.prepare(`SELECT count,expires_at FROM rate_limits WHERE bucket=? AND actor=?`).bind(bucket,actor).first();if(row&&row.expires_at>now&&row.count>=limit)return json({error:"Terlalu banyak percobaan. Coba lagi sebentar."},429,{"Retry-After":String(Math.max(1,row.expires_at-now))});const expires=(Math.floor(now/windowSec)+1)*windowSec;await db.prepare(`INSERT INTO rate_limits(bucket,actor,count,expires_at) VALUES(?,?,1,?) ON CONFLICT(bucket,actor) DO UPDATE SET count=count+1,expires_at=excluded.expires_at`).bind(bucket,actor,expires).run();return null}
+async function dailyAIBudget(env,db){const configured=Number(env.REWARD_AI_DAILY_LIMIT||100),limit=Math.max(1,Math.min(1000,Number.isFinite(configured)?Math.floor(configured):100)),now=nowSec(),windowSec=86400,bucket=`reward_ai_daily:${Math.floor(now/windowSec)}`,expires=(Math.floor(now/windowSec)+1)*windowSec;await db.prepare(`INSERT INTO rate_limits(bucket,actor,count,expires_at) VALUES(?,'global',1,?) ON CONFLICT(bucket,actor) DO UPDATE SET count=count+1,expires_at=excluded.expires_at`).bind(bucket,expires).run();const row=await db.prepare(`SELECT count FROM rate_limits WHERE bucket=? AND actor='global'`).bind(bucket).first();if(Number(row?.count||0)>limit)return json({error:"Kuota AI hari ini sudah habis. Edit Foto tetap dapat digunakan."},429,{"Retry-After":String(Math.max(1,expires-now))});return null}
 function sanitizeMeta(meta){if(!meta||typeof meta!=="object"||Array.isArray(meta))return{};const allowed=new Set(["channel","theme","source","mode"]),out={};for(const[k,v]of Object.entries(meta)){if(!allowed.has(k))continue;if(typeof v==="string")out[k]=v.slice(0,80);else if(typeof v==="number"&&Number.isFinite(v))out[k]=v;else if(typeof v==="boolean")out[k]=v}return out}
 function constantTimeEqualHex(a,b){if(typeof a!=="string"||typeof b!=="string"||a.length!==b.length)return false;let diff=0;for(let i=0;i<a.length;i++)diff|=a.charCodeAt(i)^b.charCodeAt(i);return diff===0}
  async function createSession(request,env,db){const limited=await rateLimit(request,env,db,"create_session",10,600);if(limited)return limited;const body=await readJson(request),questions=body.questions,answers=body.answers;if(body.consent!==true)return json({error:"Persetujuan diperlukan"},400);if(!validateQuestions(questions))return json({error:"Pertanyaan ronde tidak valid"},400);if(!validateAnswers(questions,answers))return json({error:"Jawaban ronde tidak valid"},400);const parentCode=body.parent_code?safeCode(body.parent_code):null,deleteKey=randomToken(),deleteHash=await sha256Hex(deleteKey),created=nowSec(),expires=created+SESSION_TTL_SECONDS;await maybeCleanup(db);for(let attempt=0;attempt<12;attempt++){const code=randomCode();try{await db.prepare(`INSERT INTO sessions(code,questions,answers,parent_code,delete_hash,status,created_at,expires_at) VALUES(?,?,?,?,?,'active',?,?)`).bind(code,JSON.stringify(questions),JSON.stringify(answers),parentCode,deleteHash,created,expires).run();return json({code,delete_key:deleteKey,expires_at:expires,expires_in_seconds:SESSION_TTL_SECONDS},201)}catch(e){if(!String(e?.message||e).toLowerCase().includes("unique"))throw e}}return json({error:"Gagal membuat kode unik. Coba lagi."},503)}
@@ -61,13 +62,16 @@ async function rewardAI(request,env,db){
    const limited=await rateLimit(request,env,db,"reward_ai",10,3600);if(limited)return limited;
   const type=String(request.headers.get("content-type")||"").toLowerCase();
   if(!type.includes("multipart/form-data"))return json({error:"Foto tidak valid."},400);
+  const contentLength=Number(request.headers.get("content-length")||0);
+  if(contentLength>5*1024*1024)return json({error:"Ukuran foto terlalu besar"},413);
 
   const form=await request.formData();
   const image=form.get("image");
   const theme=String(form.get("theme")||"visual").toLowerCase().slice(0,30);
   const rawSubtheme=String(form.get("subtheme")||"").slice(0,100);
   const mode=String(form.get("mode")||"solo")==="group"?"group":"solo";
-  const subjectType=String(form.get("subject_type")||"face").slice(0,24);
+  const requestedSubject=String(form.get("subject_type")||"unknown").toLowerCase();
+  const subjectType=new Set(["face","multi_face","food","product","nature","vehicle","object","scene","unknown"]).has(requestedSubject)?requestedSubject:"unknown";
 
   if(!(image instanceof File))return json({error:"Foto tidak ditemukan"},400);
   if(image.size>4*1024*1024)return json({error:"Ukuran foto terlalu besar"},413);
@@ -76,6 +80,7 @@ async function rewardAI(request,env,db){
 
   const allowedThemes=new Set(["beauty","fantasy","geo","ninja","cartoon","sport","fun","visual"]);
   if(!allowedThemes.has(theme))return json({error:"Tema AI tidak valid."},400);
+  const budget=await dailyAIBudget(env,db);if(budget)return budget;
 
   const safeVariation=rawSubtheme
     .replace(/[^\p{L}\p{N}\s\-/'&]/gu," ")

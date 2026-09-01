@@ -66,6 +66,12 @@ for(const route of ["register","login","me","logout","recover","state"]){
 for(const marker of ["x-klikfun-admin-key","x-klikfun-participant-token","await db.batch(statements)"]){
   assert(read("_worker.js").includes(marker),`Pengamanan grup hilang: ${marker}`);
 }
+const worker=read("_worker.js");
+for(const marker of ["REWARD_AI_DAILY_LIMIT","dailyAIBudget(env,db)","reward_ai_daily:","Retry-After","contentLength>5*1024*1024","requestedSubject"]){
+  assert(worker.includes(marker),`Pengamanan AI hilang: ${marker}`);
+}
+assert(worker.indexOf("contentLength>5*1024*1024")<worker.indexOf("request.formData()"),"Batas request AI harus diperiksa sebelum multipart diparsing");
+assert(worker.includes('new Set(["face","multi_face","food","product","nature","vehicle","object","scene","unknown"])'),"Whitelist subjek AI berubah");
 for(const marker of ["rewardGrantStore","updateRewardEntitlement","clearRewardMedia","f.size>8*1024*1024"]){
   assert(core.includes(marker),`Lifecycle Reward hilang: ${marker}`);
 }
