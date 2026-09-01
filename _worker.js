@@ -84,30 +84,30 @@ async function rewardAI(request,env,db){
     .slice(0,72);
 
   const maxFaces=mode==="group"?5:1;
-  const hasFace=subjectType==="face"||subjectType==="multi_face";
-  const identityRule=hasFace
-    ?(mode==="group"
-      ?`Keep every person recognizably the same individual and keep the same number of people, maximum ${maxFaces}. Identity must remain recognizable, but faces may be naturally restyled, groomed, relit and re-expressed for the transformation.`
-      :"Keep the subject recognizably the same individual. Preserve core likeness and distinctive features, but do not freeze the original face; natural skin refinement, grooming, expression, angle and flattering relighting are allowed.")
-    :`Transform the actual ${subjectType} content from the reference image and do not invent an unrelated person.`;
+const hasFace=subjectType==="face"||subjectType==="multi_face";
 
-  const categoryPrompt={
-    beauty:"Create a high-end photorealistic beauty/editorial transformation. Make the subject noticeably more polished and photogenic with natural skin refinement, flattering facial light, refined detail, grooming and styling.",
-    sport:"Create a cinematic photorealistic athlete transformation for the selected sport persona. Reimagine pose, expression, grooming, wardrobe, athletic presentation, camera angle, lighting and environment so the subject truly becomes that sport character.",
-    fantasy:"Create a cinematic photorealistic fantasy-character transformation. Reimagine styling, costume, hair or grooming when appropriate, pose, expression, lighting, environment and atmosphere while keeping the person recognizable.",
-    geo:"Create a cinematic historical or geographic character transformation appropriate to the selected theme. Reimagine wardrobe, grooming, pose, expression, lighting and environment without copying protected characters.",
-    ninja:"Create a cinematic photorealistic ninja-character transformation. Reimagine wardrobe, pose, expression, grooming, lighting, action and environment so it feels like a complete character transformation.",
-    cartoon:"Create a polished illustrated character transformation in the selected style. Preserve recognizable likeness while freely adapting expression, pose, costume and scene.",
-    fun:"Create a playful full-character transformation matching the selected theme. Change expression, pose, styling and scene clearly while keeping the person recognizable and respectful.",
-    visual:"Create a cinematic full-character visual transformation matching the selected theme. Reimagine styling, pose, expression, lighting, camera treatment and environment while preserving recognizable identity."
-  };
+const identityRule=hasFace
+  ?(mode==="group"
+    ?`Keep every person clearly recognizable as the same individual from the reference photo. Keep the same number of people, maximum ${maxFaces}. Preserve core facial likeness, face direction, head angle and relative placement. Natural skin refinement, grooming and flattering relighting are allowed, but do not replace identity or rotate faces into substantially different views.`
+    :"Keep the subject clearly recognizable as the same individual from the reference photo. Preserve core facial likeness, distinctive features, face direction and head angle. Natural skin refinement, grooming and flattering relighting are allowed, but do not replace the identity or rotate the face into a substantially different view.")
+  :`Transform the actual ${subjectType} content from the reference image and do not invent an unrelated person.`;
 
-  const finalPrompt=
-    identityRule+" "+
-    categoryPrompt[theme]+" "+
-    (safeVariation?`Selected theme: ${safeVariation}. `:"")+
-    "The final image should look intentionally transformed, not like the original photo with only a new background. Keep clothing modest and age-appropriate. Preserve hijab or other head coverings when present. No sexualized styling, text, logos, watermarks, extra people, duplicate faces or distorted hands.";
+const categoryPrompt={
+  beauty:"Create a high-end photorealistic beauty transformation. Improve skin finish, facial lighting, grooming and styling while keeping the original face orientation and recognizable likeness.",
+  sport:"Create a cinematic photorealistic athlete transformation. Keep the face orientation and head angle close to the reference. Transform wardrobe, athletic styling, body presentation, environment, lighting and composition. Prefer a strong portrait or controlled athletic stance instead of inventing a radically different action pose.",
+  fantasy:"Create a cinematic photorealistic fantasy-character transformation. Keep recognizable likeness and reference face orientation while transforming costume, grooming, body presentation, environment, lighting and atmosphere.",
+  geo:"Create a cinematic historical or geographic character transformation. Keep recognizable likeness and reference face orientation while transforming wardrobe, grooming, body presentation, lighting and environment.",
+  ninja:"Create a cinematic photorealistic ninja transformation. Keep recognizable likeness and reference face orientation while transforming wardrobe, body presentation, lighting and environment.",
+  cartoon:"Create a polished illustrated character transformation while preserving recognizable likeness and approximate face orientation.",
+  fun:"Create a playful full-character transformation while keeping the person recognizable and face orientation close to the reference.",
+  visual:"Create a cinematic full-character transformation while preserving recognizable identity and reference face orientation."
+};
 
+const finalPrompt=
+  identityRule+" "+
+  categoryPrompt[theme]+" "+
+  (safeVariation?`Selected theme: ${safeVariation}. `:"")+
+  "The result must still look like the same person from the input, not a newly invented face. Transform the character and scene substantially without changing identity. Keep clothing modest and age-appropriate. Preserve hijab or other head coverings when present. No sexualized styling, text, logos, watermarks, extra people, duplicate faces or distorted hands.";
   const aiForm=new FormData();
   aiForm.append("input_image_0",image,image.name||"klikfun.jpg");
     aiForm.append("prompt",finalPrompt);
