@@ -1,4 +1,4 @@
-name: Gemini Klikfun Test
+name: Gemini Klikfun Read Test
 
 on:
   workflow_dispatch:
@@ -9,7 +9,7 @@ permissions:
 jobs:
   gemini-test:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     env:
       GEMINI_CLI_TRUST_WORKSPACE: "true"
 
@@ -17,13 +17,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Gemini API heartbeat
+      - name: Gemini inspect Klikfun
         uses: google-github-actions/run-gemini-cli@v0
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           gemini_model: gemini-3-flash-preview
           prompt: |
-            Do not inspect repository files.
-            Do not use tools.
-            Reply with exactly:
-            GEMINI_KLIKFUN_OK
+            Inspect this Klikfun repository in READ-ONLY mode.
+
+            Do not modify, create, delete, rename, commit, or push any file.
+            Do not run commands that alter repository contents.
+
+            Read these files if they exist:
+            - index.html
+            - klikfun-extra.js
+            - klikfun-db.js
+            - _worker.js
+            - _routes.json
+
+            Report briefly:
+            1. Which of those files exist.
+            2. The apparent role of each file.
+            3. Which files appear most important for the Klikfun frontend/game.
+            4. Any obvious connection between frontend, database, and worker code.
+            5. Confirm explicitly that you made NO file changes.
+
+            End your response with exactly:
+            GEMINI_KLIKFUN_READ_OK
